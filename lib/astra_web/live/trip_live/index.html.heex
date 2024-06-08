@@ -1,0 +1,46 @@
+<.header>
+  Your Trip History
+  <:actions>
+    <.link patch={~p"/trips/new"}>
+      <.button>New Trip</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="trips"
+  rows={@streams.trips}
+  row_click={fn {_id, trip} -> JS.navigate(~p"/trips/#{trip}") end}
+>
+  <:col :let={{_id, trip}} label="Start odometer"><%= trip.start_odometer %></:col>
+  <:col :let={{_id, trip}} label="End odometer"><%= trip.end_odometer %></:col>
+  <:col :let={{_id, trip}} label="Trip date"><%= trip.trip_date %></:col>
+  <:col :let={{_id, trip}} label="Trip purpose"><%= trip.trip_purpose %></:col>
+  <:col :let={{_id, trip}} label="trips driven"><%= trip.miles_driven %></:col>
+  <:action :let={{_id, trip}}>
+    <div class="sr-only">
+      <.link navigate={~p"/trips/#{trip}"}>Show</.link>
+    </div>
+    <.link patch={~p"/trips/#{trip}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, trip}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: trip.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="trip-modal" show on_cancel={JS.patch(~p"/trips")}>
+  <.live_component
+    module={AstraWeb.TripLive.FormComponent}
+    id={@trip.id || :new}
+    title={@page_title}
+    action={@live_action}
+    trip={@trip}
+    patch={~p"/trips"}
+    user_id={@user_id}
+  />
+</.modal>
