@@ -47,7 +47,7 @@ defmodule AstraWeb.TripLive.Index do
 
   @impl true
   def handle_info({AstraWeb.TripLive.FormComponent, {:saved, mileage}}, socket) do
-    {:noreply, stream_insert(socket, :miles, mileage)}
+    {:noreply, stream_insert(socket, :trips, mileage)}
   end
 
   @impl true
