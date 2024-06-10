@@ -11,7 +11,9 @@
 <.list>
   <:item title="Start odometer"><%= @trip.start_odometer %></:item>
   <:item title="End odometer"><%= @trip.end_odometer %></:item>
-  <:item title="Trip date"><%= @trip.trip_date %></:item>
+  <:item title="Trip date">
+    <%= Enum.join([@trip.trip_date.month, @trip.trip_date.day, @trip.trip_date.year], "/") %>
+  </:item>
   <:item title="Trip purpose"><%= @trip.trip_purpose %></:item>
   <:item title="Miles driven"><%= @trip.miles_driven %></:item>
 </.list>

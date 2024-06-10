@@ -14,7 +14,9 @@
 >
   <:col :let={{_id, trip}} label="Start odometer"><%= trip.start_odometer %></:col>
   <:col :let={{_id, trip}} label="End odometer"><%= trip.end_odometer %></:col>
-  <:col :let={{_id, trip}} label="Trip date"><%= trip.trip_date %></:col>
+  <:col :let={{_id, trip}} label="Trip date">
+    <%= Enum.join([trip.trip_date.month, trip.trip_date.day, trip.trip_date.year], "/") %>
+  </:col>
   <:col :let={{_id, trip}} label="Trip purpose"><%= trip.trip_purpose %></:col>
   <:col :let={{_id, trip}} label="trips driven"><%= trip.miles_driven %></:col>
   <:action :let={{_id, trip}}>
