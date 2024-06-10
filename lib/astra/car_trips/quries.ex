@@ -13,17 +13,17 @@ defmodule Astra.CarTrips.Queries do
     base() |> where([t], t.user_id == ^user_id)
   end
 
-  def filter_by_date(query, start_date, end_date) do
+  def filter_by_date(query \\ base(), start_date, end_date) do
     query
     |> where([t], t.trip_date >= ^start_date)
     |> where([t], t.trip_date <= ^end_date)
   end
 
-  def filter_by_purpose(query, purpose) do
+  def filter_by_purpose(query \\ base(), purpose) do
     query |> where([t], t.trip_purpose == ^purpose)
   end
 
-  def filter_by_date_and_purpose(query, start_date, end_date, purpose) do
+  def filter_by_date_and_purpose(query \\ base(), start_date, end_date, purpose) do
     query
     |> filter_by_date(start_date, end_date)
     |> filter_by_purpose(purpose)
