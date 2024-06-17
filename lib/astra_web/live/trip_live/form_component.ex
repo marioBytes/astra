@@ -19,14 +19,16 @@ defmodule AstraWeb.TripLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input
-          field={@form[:start_odometer]}
-          type="number"
-          label="Start odometer"
-        />
+        <.input field={@form[:start_odometer]} type="number" label="Start odometer" />
         <.input field={@form[:end_odometer]} type="number" label="End odometer" />
         <.input field={@form[:trip_date]} type="date" label="Trip date" />
-        <.input field={@form[:trip_purpose]} type="text" label="Trip purpose" />
+        <.input
+          field={@form[:trip_purpose]}
+          type="select"
+          label="Trip purpose"
+          options={@options}
+          value={@default_value}
+        />
         <:actions>
           <.button phx-disable-with="Saving...">Save Trip</.button>
         </:actions>
@@ -42,7 +44,9 @@ defmodule AstraWeb.TripLive.FormComponent do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign_form(changeset)}
+     |> assign_form(changeset)
+     |> assign_options()
+     |> assign_default_option(changeset)}
   end
 
   @impl true
@@ -83,7 +87,6 @@ defmodule AstraWeb.TripLive.FormComponent do
     case CarTrips.create_trip(trip_params) do
       {:ok, trip} ->
         notify_parent({:saved, trip})
-        IO.inspect("done")
 
         {:noreply,
          socket
@@ -100,11 +103,21 @@ defmodule AstraWeb.TripLive.FormComponent do
     assign(socket, :form, to_form(changeset))
   end
 
+  defp assign_options(socket),
+    do: socket |> assign(:options, Personal: :personal, Business: :business, Other: :other)
+
+  defp assign_default_option(socket, %{data: %{trip_purpose: purpose}}),
+    do: assign(socket, :default_value, purpose)
+
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp calculate_miles_driven(%{"start_odometer" => start_odometer,"end_odometer" => end_odometer}) do
+  defp calculate_miles_driven(%{
+         "start_odometer" => start_odometer,
+         "end_odometer" => end_odometer
+       }) do
     if String.length(start_odometer) > 0 and String.length(end_odometer) > 0 do
       total = String.to_integer(end_odometer) - String.to_integer(start_odometer)
+
       if total > 0 do
         total
       else
