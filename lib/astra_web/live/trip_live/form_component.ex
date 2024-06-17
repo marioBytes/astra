@@ -104,7 +104,7 @@ defmodule AstraWeb.TripLive.FormComponent do
   end
 
   defp assign_options(socket),
-    do: socket |> assign(:options, Personal: :personal, Business: :business, Other: :other)
+    do: socket |> assign(:options, Personal: :Personal, Business: :Business, Other: :Other)
 
   defp assign_default_option(socket, %{data: %{trip_purpose: purpose}}),
     do: assign(socket, :default_value, purpose)

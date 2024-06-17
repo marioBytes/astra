@@ -8,7 +8,7 @@ defmodule Astra.CarTrips.Trip do
     field :start_odometer, :integer
     field :end_odometer, :integer
     field :trip_date, :date
-    field :trip_purpose, :string
+    field :trip_purpose, Ecto.Enum, values: [:Business, :Personal, :Other]
     field :miles_driven, :integer
 
     belongs_to :user, User
