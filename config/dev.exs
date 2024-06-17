@@ -2,8 +2,8 @@ import Config
 
 # Configure your database
 config :astra, Astra.Repo,
-  username: "postgres",
-  password: "postgres",
+  username: "nova",
+  password: "pulse",
   hostname: "localhost",
   database: "astra_dev",
   stacktrace: true,
