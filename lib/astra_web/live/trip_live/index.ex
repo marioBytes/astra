@@ -4,8 +4,6 @@ defmodule AstraWeb.TripLive.Index do
   alias Astra.CarTrips
   alias Astra.CarTrips.Trip
 
-  alias Astra.Authorizer
-
   @impl true
   def mount(_params, _session, socket) do
     {:ok, stream(socket, :trips, CarTrips.list_trips(socket.assigns.current_user.id))}
@@ -22,7 +20,7 @@ defmodule AstraWeb.TripLive.Index do
         socket
         |> assign(:page_title, "Edit Trip")
         |> assign(:trip, trip)
-        |> assign(:current_user, current_user)
+        |> assign_current_user()
 
       {:error, :unauthorized} ->
         socket
@@ -35,14 +33,14 @@ defmodule AstraWeb.TripLive.Index do
     socket
     |> assign(:page_title, "New Trip")
     |> assign(:trip, %Trip{user_id: socket.assigns.current_user.id})
-    |> assign(:current_user, socket.assigns.current_user)
+    |> assign_current_user()
   end
 
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing Your Trips")
     |> assign(:trip, nil)
-    |> assign(:current_user, socket.assigns.current_user)
+    |> assign_current_user()
   end
 
   @impl true
@@ -58,7 +56,7 @@ defmodule AstraWeb.TripLive.Index do
       {:ok, _} ->
         {:noreply, stream_delete(socket, :trips, trip)}
 
-      {:error, changeset} ->
+      {:error, %Ecto.Changeset{}} ->
         {:noreply,
          socket
          |> put_flash(:error, "Something went wrong, refresh the page and try again.")}
@@ -68,5 +66,9 @@ defmodule AstraWeb.TripLive.Index do
          socket
          |> put_flash(:error, "You cannot update trips that don't belong to you.")}
     end
+  end
+
+  defp assign_current_user(socket) do
+    assign(socket, :current_user, socket.assigns.current_user)
   end
 end

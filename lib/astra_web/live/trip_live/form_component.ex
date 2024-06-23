@@ -46,7 +46,8 @@ defmodule AstraWeb.TripLive.FormComponent do
      |> assign(assigns)
      |> assign_form(changeset)
      |> assign_options()
-     |> assign_default_option(changeset)}
+     |> assign_default_option(changeset)
+     |> assign(current_user: assigns.current_user)}
   end
 
   @impl true
@@ -60,10 +61,8 @@ defmodule AstraWeb.TripLive.FormComponent do
   end
 
   def handle_event("save", %{"trip" => trip_params}, socket) do
-    trip_params =
-      trip_params
-      |> Map.put("miles_driven", calculate_miles_driven(trip_params))
-      |> Map.put("user_id", socket.assigns.trip.current_user.id)
+    trip_params = maybe_calculate_miles_driven(socket.assigns.trip, trip_params)
+    trip_params = Map.put(trip_params, "miles_driven", calculate_miles_driven(trip_params))
 
     save_trip(socket, socket.assigns.action, trip_params)
   end
@@ -94,6 +93,8 @@ defmodule AstraWeb.TripLive.FormComponent do
   end
 
   defp save_trip(socket, :new, trip_params) do
+    trip_params = Map.put(trip_params, "user_id", socket.assigns.current_user.id)
+
     case CarTrips.create_trip(trip_params) do
       {:ok, trip} ->
         notify_parent({:saved, trip})
@@ -104,7 +105,6 @@ defmodule AstraWeb.TripLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect(changeset)
         {:noreply, assign_form(socket, changeset)}
     end
   end
@@ -121,20 +121,30 @@ defmodule AstraWeb.TripLive.FormComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
+  defp maybe_calculate_miles_driven(
+         trip,
+         %{"start_odometer" => start_odometer, "end_odometer" => end_odometer} = trip_params
+       ) do
+    if trip.start_odometer == start_odometer and trip.end_odometer == end_odometer do
+      trip_params
+    else
+      Map.put(trip_params, "miles_driven", calculate_miles_driven(trip_params))
+    end
+  end
+
   defp calculate_miles_driven(%{
          "start_odometer" => start_odometer,
          "end_odometer" => end_odometer
        }) do
     if String.length(start_odometer) > 0 and String.length(end_odometer) > 0 do
-      total = String.to_integer(end_odometer) - String.to_integer(start_odometer)
+      {start_odometer, _} = Integer.parse(start_odometer)
+      {end_odometer, _} = Integer.parse(end_odometer)
 
-      if total > 0 do
-        total
-      else
-        ""
-      end
+      total = end_odometer - start_odometer
+
+      if total > 0, do: total, else: 0
     else
-      ""
+      0
     end
   end
 end

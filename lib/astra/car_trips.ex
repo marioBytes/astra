@@ -85,7 +85,7 @@ defmodule Astra.CarTrips do
   """
   def get_trip!(id), do: Repo.get(Trip, id)
 
-  def get_trip(current_user, id) do
+  def get_trip(%User{} = current_user, id) do
     trip = Repo.get(Trip, id)
 
     if is_nil(trip) do
@@ -129,7 +129,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_trip(struct(), %Trip{}, struct()) :: {atom(), struct()}
+  @spec update_trip(%User{}, %Trip{}, struct()) :: {atom(), struct()}
   def update_trip(%User{} = current_user, %Trip{} = trip, attrs) do
     case Authorizer.authorize(:update, current_user, trip) do
       :ok ->
@@ -154,7 +154,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_trip(struct(), %Trip{}) :: {atom(), struct()}
+  @spec delete_trip(%User{}, %Trip{}) :: {atom(), struct()}
   def delete_trip(%User{} = current_user, %Trip{} = trip) do
     case Authorizer.authorize(:update, current_user, trip) do
       :ok ->

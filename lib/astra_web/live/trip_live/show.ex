@@ -1,7 +1,7 @@
 defmodule AstraWeb.TripLive.Show do
   use AstraWeb, :live_view
 
-  alias Astra.{Authorizer, CarTrips}
+  alias Astra.CarTrips
 
   @impl true
   def mount(_params, _session, socket) do
