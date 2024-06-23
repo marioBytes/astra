@@ -95,6 +95,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec create_trip(struct()) :: {atom(), struct()}
   def create_trip(attrs \\ %{}) do
     %Trip{}
     |> Trip.changeset(attrs)
@@ -113,6 +114,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec update_trip(integer(), %Trip{}, struct()) :: {atom(), struct()}
   def update_trip(user_id, %Trip{} = trip, attrs) do
     if trip.user_id == user_id do
       trip
@@ -136,6 +138,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
+  @spec delete_trip(integer(), %Trip{}) :: {atom(), struct()}
   def delete_trip(user_id, %Trip{} = trip) do
     if trip.user_id == user_id do
       Repo.delete(trip)
@@ -154,6 +157,7 @@ defmodule Astra.CarTrips do
       %Ecto.Changeset{data: %Trip{}}
 
   """
+  @spec change_trip(%Trip{}, struct()) :: %Ecto.Changeset{}
   def change_trip(%Trip{} = trip, attrs \\ %{}) do
     Trip.changeset(trip, attrs)
   end
@@ -167,6 +171,7 @@ defmodule Astra.CarTrips do
       %Ecto.Changeset{errors: [invalid_credentials: {"You cannot update a trip that isn't yours.", []}]}
 
   """
+  @spec change_trip_error(%Trip{}, atom(), String.t()) :: %Ecto.Changeset{}
   def change_trip_error(%Trip{} = trip, key, msg) do
     changeset = change_trip(trip)
 
