@@ -62,7 +62,6 @@ defmodule AstraWeb.TripLive.FormComponent do
 
   def handle_event("save", %{"trip" => trip_params}, socket) do
     trip_params = maybe_calculate_miles_driven(socket.assigns.trip, trip_params)
-    trip_params = Map.put(trip_params, "miles_driven", calculate_miles_driven(trip_params))
 
     save_trip(socket, socket.assigns.action, trip_params)
   end
