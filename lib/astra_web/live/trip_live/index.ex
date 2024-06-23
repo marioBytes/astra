@@ -25,9 +25,8 @@ defmodule AstraWeb.TripLive.Index do
       |> assign(:user_id, current_user.id)
     else
       socket
-      |> assign(:page_title, "Edit Trip")
-      |> assign(:trip, %Trip{})
-      |> assign(:error, "You cannot edit trips that do not belong to you")
+      |> put_flash(:error, "You cannot view trips that don't belong to you.")
+      |> redirect(to: "/trips")
     end
   end
 
@@ -53,8 +52,24 @@ defmodule AstraWeb.TripLive.Index do
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     trip = CarTrips.get_trip!(id)
-    {:ok, _} = CarTrips.delete_trip(trip)
 
-    {:noreply, stream_delete(socket, :trips, trip)}
+    case CarTrips.delete_trip(socket.assigns.current_user.id, trip) do
+      {:ok, _} ->
+        {:noreply, stream_delete(socket, :trips, trip)}
+
+      {:error, changeset} ->
+        error_message =
+          if changeset.errors[:invalid_credentials] do
+            {error_message, _} = changeset.errors[:invalid_credentials]
+
+            error_message
+          else
+            "Unable to delete trip, refresh the page and try again."
+          end
+
+        {:noreply,
+         socket
+         |> put_flash(:error, error_message)}
+    end
   end
 end

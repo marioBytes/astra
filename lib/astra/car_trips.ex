@@ -106,17 +106,22 @@ defmodule Astra.CarTrips do
 
   ## Examples
 
-      iex> update_trip(trip, %{field: new_value})
+      iex> update_trip(user_id, trip, %{field: new_value})
       {:ok, %Trip{}}
 
-      iex> update_trip(trip, %{field: bad_value})
+      iex> update_trip(user_id, trip, %{field: bad_value})
       {:error, %Ecto.Changeset{}}
 
   """
-  def update_trip(%Trip{} = trip, attrs) do
-    trip
-    |> Trip.changeset(attrs)
-    |> Repo.update()
+  def update_trip(user_id, %Trip{} = trip, attrs) do
+    if trip.user_id == user_id do
+      trip
+      |> Trip.changeset(attrs)
+      |> Repo.update()
+    else
+      {:error,
+       change_trip_error(trip, :invalid_credentials, "You cannot update a trip that isn't yours.")}
+    end
   end
 
   @doc """
@@ -124,15 +129,20 @@ defmodule Astra.CarTrips do
 
   ## Examples
 
-      iex> delete_trip(trip)
+      iex> delete_trip(user_id, trip)
       {:ok, %Trip{}}
 
-      iex> delete_trip(trip)
+      iex> delete_trip(user_id, trip)
       {:error, %Ecto.Changeset{}}
 
   """
-  def delete_trip(%Trip{} = trip) do
-    Repo.delete(trip)
+  def delete_trip(user_id, %Trip{} = trip) do
+    if trip.user_id == user_id do
+      Repo.delete(trip)
+    else
+      {:error,
+       change_trip_error(trip, :invalid_credentials, "You cannot update a trip that isn't yours.")}
+    end
   end
 
   @doc """
@@ -146,5 +156,24 @@ defmodule Astra.CarTrips do
   """
   def change_trip(%Trip{} = trip, attrs \\ %{}) do
     Trip.changeset(trip, attrs)
+  end
+
+  @doc """
+  Returns a `%Ecto.Changeset{}` with a custom error
+
+  ## Examples
+
+      iex> change_trip_error(trip, :invalid_credentials, "You cannot update a trip that isn't yours.")
+      %Ecto.Changeset{errors: [invalid_credentials: {"You cannot update a trip that isn't yours.", []}]}
+
+  """
+  def change_trip_error(%Trip{} = trip, key, msg) do
+    changeset = change_trip(trip)
+
+    Ecto.Changeset.add_error(
+      changeset,
+      key,
+      msg
+    )
   end
 end

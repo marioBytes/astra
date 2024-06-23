@@ -69,7 +69,7 @@ defmodule AstraWeb.TripLive.FormComponent do
   end
 
   defp save_trip(socket, :edit, trip_params) do
-    case CarTrips.update_trip(socket.assigns.trip, trip_params) do
+    case CarTrips.update_trip(socket.assigns.user_id, socket.assigns.trip, trip_params) do
       {:ok, trip} ->
         notify_parent({:saved, trip})
 
@@ -79,7 +79,15 @@ defmodule AstraWeb.TripLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_form(socket, changeset)}
+        if changeset.errors[:invalid_credentials] do
+          {error_message, _} = changeset.errors[:invalid_credentials]
+          {:noreply,
+           socket
+           |> put_flash(:error, error_message)
+           |> push_patch(to: socket.assigns.patch)}
+        else
+          {:noreply, assign_form(socket, changeset)}
+        end
     end
   end
 

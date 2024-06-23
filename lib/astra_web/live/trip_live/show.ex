@@ -18,7 +18,10 @@ defmodule AstraWeb.TripLive.Show do
        |> assign(:page_title, page_title(socket.assigns.live_action))
        |> assign(:trip, trip)}
     else
-      {:noreply, push_navigate(socket, to: "/trips")}
+      {:noreply,
+       socket
+       |> put_flash(:error, "You cannot view trips that don't belong to you.")
+       |> push_navigate(to: "/trips")}
     end
   end
 
