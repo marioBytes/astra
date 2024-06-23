@@ -63,13 +63,17 @@ defmodule AstraWeb.TripLive.FormComponent do
     trip_params =
       trip_params
       |> Map.put("miles_driven", calculate_miles_driven(trip_params))
-      |> Map.put("user_id", socket.assigns.trip.user_id)
+      |> Map.put("user_id", socket.assigns.trip.current_user.id)
 
     save_trip(socket, socket.assigns.action, trip_params)
   end
 
-  defp save_trip(socket, :edit, trip_params) do
-    case CarTrips.update_trip(socket.assigns.user_id, socket.assigns.trip, trip_params) do
+  defp save_trip(
+         %{assigns: %{current_user: current_user, trip: trip}} = socket,
+         :edit,
+         trip_params
+       ) do
+    case CarTrips.update_trip(current_user, trip, trip_params) do
       {:ok, trip} ->
         notify_parent({:saved, trip})
 
@@ -79,15 +83,13 @@ defmodule AstraWeb.TripLive.FormComponent do
          |> push_patch(to: socket.assigns.patch)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        if changeset.errors[:invalid_credentials] do
-          {error_message, _} = changeset.errors[:invalid_credentials]
-          {:noreply,
-           socket
-           |> put_flash(:error, error_message)
-           |> push_patch(to: socket.assigns.patch)}
-        else
-          {:noreply, assign_form(socket, changeset)}
-        end
+        {:noreply, assign_form(socket, changeset)}
+
+      {:error, :unauthorized} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "You cannot update trips that don't belong to you.")
+         |> push_patch(to: socket.assigns.patch)}
     end
   end
 

@@ -6,6 +6,8 @@ defmodule Astra.CarTrips do
   import Ecto.Query, warn: false
   alias Astra.Repo
 
+  alias Astra.Accounts.User
+  alias Astra.Authorizer
   alias Astra.CarTrips.Trip
   alias Astra.CarTrips.Queries
 
@@ -74,14 +76,27 @@ defmodule Astra.CarTrips do
 
   ## Examples
 
-      iex> get_trip!(123)
+      iex> get_trip(123)
       %Trip{}
 
-      iex> get_trip!(456)
+      iex> get_trip(456)
       ** (Ecto.NoResultsError)
 
   """
-  def get_trip!(id), do: Repo.get!(Trip, id)
+  def get_trip!(id), do: Repo.get(Trip, id)
+
+  def get_trip(current_user, id) do
+    trip = Repo.get(Trip, id)
+
+    if is_nil(trip) do
+      {:error, :not_found}
+    else
+      case Authorizer.authorize(:show, current_user, trip) do
+        :ok -> {:ok, trip}
+        {:error, :unauthorized} -> {:error, :unauthorized}
+      end
+    end
+  end
 
   @doc """
   Creates a trip.
@@ -114,15 +129,16 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_trip(integer(), %Trip{}, struct()) :: {atom(), struct()}
-  def update_trip(user_id, %Trip{} = trip, attrs) do
-    if trip.user_id == user_id do
-      trip
-      |> Trip.changeset(attrs)
-      |> Repo.update()
-    else
-      {:error,
-       change_trip_error(trip, :invalid_credentials, "You cannot update a trip that isn't yours.")}
+  @spec update_trip(struct(), %Trip{}, struct()) :: {atom(), struct()}
+  def update_trip(%User{} = current_user, %Trip{} = trip, attrs) do
+    case Authorizer.authorize(:update, current_user, trip) do
+      :ok ->
+        trip
+        |> Trip.changeset(attrs)
+        |> Repo.update()
+
+      {:error, :unauthorized} ->
+        {:error, :unauthorized}
     end
   end
 
@@ -138,13 +154,14 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_trip(integer(), %Trip{}) :: {atom(), struct()}
-  def delete_trip(user_id, %Trip{} = trip) do
-    if trip.user_id == user_id do
-      Repo.delete(trip)
-    else
-      {:error,
-       change_trip_error(trip, :invalid_credentials, "You cannot update a trip that isn't yours.")}
+  @spec delete_trip(struct(), %Trip{}) :: {atom(), struct()}
+  def delete_trip(%User{} = current_user, %Trip{} = trip) do
+    case Authorizer.authorize(:update, current_user, trip) do
+      :ok ->
+        Repo.delete(trip)
+
+      {:error, :unauthorized} ->
+        {:error, :unauthorized}
     end
   end
 
@@ -160,25 +177,5 @@ defmodule Astra.CarTrips do
   @spec change_trip(%Trip{}, struct()) :: %Ecto.Changeset{}
   def change_trip(%Trip{} = trip, attrs \\ %{}) do
     Trip.changeset(trip, attrs)
-  end
-
-  @doc """
-  Returns a `%Ecto.Changeset{}` with a custom error
-
-  ## Examples
-
-      iex> change_trip_error(trip, :invalid_credentials, "You cannot update a trip that isn't yours.")
-      %Ecto.Changeset{errors: [invalid_credentials: {"You cannot update a trip that isn't yours.", []}]}
-
-  """
-  @spec change_trip_error(%Trip{}, atom(), String.t()) :: %Ecto.Changeset{}
-  def change_trip_error(%Trip{} = trip, key, msg) do
-    changeset = change_trip(trip)
-
-    Ecto.Changeset.add_error(
-      changeset,
-      key,
-      msg
-    )
   end
 end

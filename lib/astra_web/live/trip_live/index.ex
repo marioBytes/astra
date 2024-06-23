@@ -4,6 +4,8 @@ defmodule AstraWeb.TripLive.Index do
   alias Astra.CarTrips
   alias Astra.CarTrips.Trip
 
+  alias Astra.Authorizer
+
   @impl true
   def mount(_params, _session, socket) do
     {:ok, stream(socket, :trips, CarTrips.list_trips(socket.assigns.current_user.id))}
@@ -14,19 +16,18 @@ defmodule AstraWeb.TripLive.Index do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  defp apply_action(socket, :edit, %{"id" => id}) do
-    trip = CarTrips.get_trip!(id)
-    current_user = socket.assigns.current_user
+  defp apply_action(%{assigns: %{current_user: current_user}} = socket, :edit, %{"id" => id}) do
+    case CarTrips.get_trip(current_user, id) do
+      {:ok, trip} ->
+        socket
+        |> assign(:page_title, "Edit Trip")
+        |> assign(:trip, trip)
+        |> assign(:current_user, current_user)
 
-    if current_user.id == trip.user_id do
-      socket
-      |> assign(:page_title, "Edit Trip")
-      |> assign(:trip, trip)
-      |> assign(:user_id, current_user.id)
-    else
-      socket
-      |> put_flash(:error, "You cannot view trips that don't belong to you.")
-      |> redirect(to: "/trips")
+      {:error, :unauthorized} ->
+        socket
+        |> put_flash(:error, "You cannot view trips that don't belong to you.")
+        |> redirect(to: "/trips")
     end
   end
 
@@ -34,14 +35,14 @@ defmodule AstraWeb.TripLive.Index do
     socket
     |> assign(:page_title, "New Trip")
     |> assign(:trip, %Trip{user_id: socket.assigns.current_user.id})
-    |> assign(:user_id, socket.assigns.current_user.id)
+    |> assign(:current_user, socket.assigns.current_user)
   end
 
   defp apply_action(socket, :index, _params) do
     socket
     |> assign(:page_title, "Listing Your Trips")
     |> assign(:trip, nil)
-    |> assign(:user_id, socket.assigns.current_user.id)
+    |> assign(:current_user, socket.assigns.current_user)
   end
 
   @impl true
@@ -53,23 +54,19 @@ defmodule AstraWeb.TripLive.Index do
   def handle_event("delete", %{"id" => id}, socket) do
     trip = CarTrips.get_trip!(id)
 
-    case CarTrips.delete_trip(socket.assigns.current_user.id, trip) do
+    case CarTrips.delete_trip(socket.assigns.current_user, trip) do
       {:ok, _} ->
         {:noreply, stream_delete(socket, :trips, trip)}
 
       {:error, changeset} ->
-        error_message =
-          if changeset.errors[:invalid_credentials] do
-            {error_message, _} = changeset.errors[:invalid_credentials]
-
-            error_message
-          else
-            "Unable to delete trip, refresh the page and try again."
-          end
-
         {:noreply,
          socket
-         |> put_flash(:error, error_message)}
+         |> put_flash(:error, "Something went wrong, refresh the page and try again.")}
+
+      {:error, :unauthorized} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "You cannot update trips that don't belong to you.")}
     end
   end
 end
