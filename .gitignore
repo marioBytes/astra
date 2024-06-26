@@ -35,3 +35,5 @@ astra-*.tar
 npm-debug.log
 /assets/node_modules/
 
+# Ignore asdf version manager.
+.tool-versions
