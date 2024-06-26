@@ -5,8 +5,20 @@ defmodule AstraWeb.TripLive.Index do
   alias Astra.CarTrips.Trip
 
   @impl true
-  def mount(_params, _session, socket) do
-    {:ok, stream(socket, :trips, CarTrips.list_trips(socket.assigns.current_user.id))}
+  def mount(_params, _session, %{assigns: %{current_user: current_user}} = socket) do
+    per_page = 5
+    current_page = 1
+    order_by = :trip_date
+    order = "desc"
+
+    {:ok,
+      socket
+      |> stream(:trips, CarTrips.list_trips(current_user, per_page: per_page, current_page: current_page, order: order, order_by: order_by))
+      |> assign(:per_page, per_page)
+      |> assign(:current_page, current_page)
+      |> assign(:order, order)
+      |> assign(:order_by, order_by)
+    }
   end
 
   @impl true

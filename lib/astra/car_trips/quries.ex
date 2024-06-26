@@ -5,8 +5,6 @@ defmodule Astra.CarTrips.Queries do
 
   defp base() do
     from(t in Trip)
-    |> order_by([t], [desc: t.trip_date])
-    |> limit(50)
   end
 
   def filter_by_user(user_id) do

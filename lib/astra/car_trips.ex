@@ -20,8 +20,61 @@ defmodule Astra.CarTrips do
       [%Trip{}, ...]
 
   """
-  def list_trips(user_id) do
-    Queries.filter_by_user(user_id) |> Repo.all()
+  def list_trips(%User{} = current_user) do
+    Queries.filter_by_user(current_user.id) |> Repo.all()
+  end
+
+  @doc """
+  Returns the list of trips by user id and a set of criteria.
+
+  ## Examples
+
+      iex> list_trips(1, current_page: 1, per_page: 25, "asc", :trip_date)
+      [%Trip{}, ...]
+
+  """
+  def list_trips(%User{} = current_user, criteria) do
+    query = Queries.filter_by_user(current_user.id)
+
+    Enum.reduce(criteria, [query, 1, 25, "desc", :trip_date], fn
+      {:current_page, current_page}, [query, _page, per_page, order, order_by] ->
+        [query, current_page, per_page, order, order_by]
+
+      {:per_page, per_page}, [query, current_page, _per_page, order, order_by] ->
+        [from(q in query, limit: ^per_page), current_page, per_page, order, order_by]
+
+      {:order, order}, [query, current_page, per_page, _order, order_by] ->
+        [query, current_page, per_page, order, order_by]
+
+      _, [query, current_page, per_page, order, order_by] ->
+        [query, current_page, per_page, order, order_by]
+    end)
+    |> (fn
+          [query, current_page, per_page, "asc", order_by]
+          when current_page > 0 and per_page > 0 ->
+            from(q in query,
+              limit: ^per_page,
+              offset: (^current_page - 1) * ^per_page,
+              order_by: [asc: ^order_by]
+            )
+
+          [query, current_page, per_page, "desc", order_by]
+          when current_page > 0 and per_page > 0 ->
+            from(q in query,
+              limit: ^per_page,
+              offset: (^current_page - 1) * ^per_page,
+              order_by: [desc: ^order_by]
+            )
+
+          [query, current_page, per_page, _, order_by]
+          when current_page > 0 and per_page > 0 ->
+            from(q in query,
+              limit: ^per_page,
+              offset: (^current_page - 1) * ^per_page,
+              order_by: ^order_by
+            )
+        end).()
+    |> Repo.all()
   end
 
   @doc """
