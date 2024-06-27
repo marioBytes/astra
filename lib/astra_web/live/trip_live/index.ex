@@ -4,21 +4,30 @@ defmodule AstraWeb.TripLive.Index do
   alias Astra.CarTrips
   alias Astra.CarTrips.Trip
 
+  @per_page 25
+
   @impl true
   def mount(_params, _session, %{assigns: %{current_user: current_user}} = socket) do
-    per_page = 5
-    current_page = 1
+    page = 1
+    per_page = @per_page
     order_by = :trip_date
     order = "desc"
 
     {:ok,
-      socket
-      |> stream(:trips, CarTrips.list_trips(current_user, per_page: per_page, current_page: current_page, order: order, order_by: order_by))
-      |> assign(:per_page, per_page)
-      |> assign(:current_page, current_page)
-      |> assign(:order, order)
-      |> assign(:order_by, order_by)
-    }
+     socket
+     |> stream(
+       :trips,
+       CarTrips.list_trips(current_user,
+         per_page: per_page,
+         page: page,
+         order: order,
+         order_by: order_by
+       )
+     )
+     |> assign(:per_page, per_page)
+     |> assign(:page, page)
+     |> assign(:order, order)
+     |> assign(:order_by, order_by)}
   end
 
   @impl true
@@ -78,6 +87,46 @@ defmodule AstraWeb.TripLive.Index do
          socket
          |> put_flash(:error, "You cannot update trips that don't belong to you.")}
     end
+  end
+
+  def handle_event(
+        "order-by",
+        value,
+        %{assigns: %{current_user: current_user, order_by: old_order_by, order: order}} = socket
+      ) do
+    new_order_by =
+      value["order-column"]
+      |> String.split(" ")
+      |> Enum.join("_")
+      |> String.downcase()
+      |> String.to_atom()
+
+    page = 1
+    per_page = @per_page
+
+    new_order =
+      (fn
+         new_order_by, old_order_by, "asc" when new_order_by == old_order_by ->
+           "desc"
+
+         _, _, _ ->
+           "asc"
+       end).(new_order_by, old_order_by, order)
+
+    trips =
+      CarTrips.list_trips(current_user,
+        page: page,
+        per_page: per_page,
+        order_by: new_order_by,
+        order: order
+      )
+
+    {:noreply,
+     stream(socket, :trips, trips, reset: true)
+     |> assign(page: page)
+     |> assign(per_page: per_page)
+     |> assign(order_by: new_order_by)
+     |> assign(order: new_order)}
   end
 
   defp assign_current_user(socket) do

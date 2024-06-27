@@ -18,7 +18,7 @@
     <%= Enum.join([trip.trip_date.month, trip.trip_date.day, trip.trip_date.year], "/") %>
   </:col>
   <:col :let={{_id, trip}} label="Trip purpose"><%= trip.trip_purpose %></:col>
-  <:col :let={{_id, trip}} label="trips driven"><%= trip.miles_driven %></:col>
+  <:col :let={{_id, trip}} label="Miles driven"><%= trip.miles_driven %></:col>
   <:action :let={{_id, trip}}>
     <div class="sr-only">
       <.link navigate={~p"/trips/#{trip}"}>Show</.link>
