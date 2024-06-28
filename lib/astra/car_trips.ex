@@ -36,47 +36,9 @@ defmodule Astra.CarTrips do
   def list_trips(%User{} = current_user, criteria) do
     query = Queries.filter_by_user(current_user.id)
 
-    Enum.reduce(criteria, [query, 1, 25, "desc", :trip_date], fn
-      {:page, page}, [query, _page, per_page, order, order_by] ->
-        [query, page, per_page, order, order_by]
-
-      {:per_page, per_page}, [query, page, _per_page, order, order_by] ->
-        [from(q in query, limit: ^per_page), page, per_page, order, order_by]
-
-      {:order, order}, [query, page, per_page, _order, order_by] ->
-        [query, page, per_page, order, order_by]
-
-      {:order_by, order_by}, [query, page, per_page, order, _order_by] ->
-        [query, page, per_page, order, order_by]
-
-      _, [query, page, per_page, order, order_by] ->
-        [query, page, per_page, order, order_by]
-    end)
-    |> (fn
-          [query, page, per_page, "asc", order_by]
-          when page > 0 and per_page > 0 ->
-            from(q in query,
-              limit: ^per_page,
-              offset: (^page - 1) * ^per_page,
-              order_by: [asc: ^order_by]
-            )
-
-          [query, page, per_page, "desc", order_by]
-          when page > 0 and per_page > 0 ->
-            from(q in query,
-              limit: ^per_page,
-              offset: (^page - 1) * ^per_page,
-              order_by: [desc: ^order_by]
-            )
-
-          [query, page, per_page, _, order_by]
-          when page > 0 and per_page > 0 ->
-            from(q in query,
-              limit: ^per_page,
-              offset: (^page - 1) * ^per_page,
-              order_by: ^order_by
-            )
-        end).()
+    criteria
+    |> build_criteria(query)
+    |> build_query()
     |> Repo.all()
   end
 
@@ -233,5 +195,39 @@ defmodule Astra.CarTrips do
   @spec change_trip(%Trip{}, struct()) :: %Ecto.Changeset{}
   def change_trip(%Trip{} = trip, attrs \\ %{}) do
     Trip.changeset(trip, attrs)
+  end
+
+  defp build_criteria(criteria, query) do
+    Enum.reduce(criteria, [query, 1, 25, "desc", :trip_date], fn
+      {:page, page}, [query, _page, per_page, order, order_by] ->
+        [query, page, per_page, order, order_by]
+
+      {:per_page, per_page}, [query, page, _per_page, order, order_by] ->
+        [from(q in query, limit: ^per_page), page, per_page, order, order_by]
+
+      {:order, order}, [query, page, per_page, _order, order_by] ->
+        [query, page, per_page, order, order_by]
+
+      {:order_by, order_by}, [query, page, per_page, order, _order_by] ->
+        [query, page, per_page, order, order_by]
+
+      _, criteria ->
+        criteria
+    end)
+  end
+
+  defp build_query([query, page, per_page, order, order_by]) when page > 0 and per_page > 0 do
+    base_query = from(q in query, limit: ^per_page, offset: (^page - 1) * ^per_page)
+
+    case order do
+      "desc" ->
+        base_query |> order_by([t], desc: ^order_by)
+
+      "asc" ->
+        base_query |> order_by([t], asc: ^order_by)
+
+      _ ->
+        base_query
+    end
   end
 end
