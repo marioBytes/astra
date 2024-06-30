@@ -35,6 +35,8 @@
   </:action>
 </.table>
 
+<.paginator paginator={@paginator} />
+
 <.modal :if={@live_action in [:new, :edit]} id="trip-modal" show on_cancel={JS.patch(~p"/trips")}>
   <.live_component
     module={AstraWeb.TripLive.FormComponent}

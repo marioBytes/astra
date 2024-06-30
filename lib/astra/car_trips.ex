@@ -43,6 +43,21 @@ defmodule Astra.CarTrips do
   end
 
   @doc """
+  Returns the count of user trips
+
+  ## Examples
+
+      iex> count_trips(%User{})
+      80
+
+  """
+  @spec count_trips(%User{}) :: integer()
+  def count_trips(%User{} = current_user) do
+    Queries.filter_by_user(current_user.id)
+    |> Repo.aggregate(:count)
+  end
+
+  @doc """
   Returns a list of trips within a date range YYYY-MM-DD
 
   ## Examples
