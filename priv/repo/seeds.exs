@@ -27,7 +27,7 @@ Enum.map(users, fn u ->
   |> User.registration_changeset(u)
   |> Repo.insert!()
 
-  Enum.map(1..25, fn _i ->
+  Enum.map(1..100, fn _i ->
     start_odometer = :rand.uniform(200_000)
     end_odometer = start_odometer + :rand.uniform(100)
     miles_driven = end_odometer - start_odometer
