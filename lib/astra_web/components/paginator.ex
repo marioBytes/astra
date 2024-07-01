@@ -10,9 +10,9 @@ defmodule AstraWeb.Paginator do
         <%!-- Helper text --%>
         <div class="hidden sm:block">
           <p>
-            Showing <span><%= @paginator.first_item %></span>
-            to <span><%= @paginator.last_item %></span>
-            of <span><%= @paginator.total_items %></span>
+            Showing <span class="font-bold"><%= @paginator.first_item %></span>
+            to <span class="font-bold"><%= @paginator.last_item %></span>
+            of <span class="font-bold"><%= @paginator.total_items %></span>
             results
           </p>
         </div>
