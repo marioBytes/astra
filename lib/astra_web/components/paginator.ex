@@ -39,21 +39,45 @@ defmodule AstraWeb.Paginator do
     """
   end
 
-  def build_paginator_attrs(%{
-         first_item: first_item,
-         last_item: last_item,
-         page_item_count: page_item_count,
-         total_items: total_items,
-         has_prev_page?: has_prev_page?,
-         has_next_page?: has_next_page?
-       }) do
+  def build_paginator_attrs("prev", current_page, item_count, item_per_page, paginator) do
+    first_item = get_first_item_num(current_page, item_per_page)
+    last_item = get_last_item_num(first_item, item_count)
+
     %{
       first_item: first_item,
       last_item: last_item,
-      page_item_count: page_item_count,
-      total_items: total_items,
-      has_prev_page?: has_prev_page?,
-      has_next_page?: has_next_page?
+      page_item_count: item_count,
+      total_items: paginator.total_items,
+      has_prev_page?: current_page > 1,
+      has_next_page?: paginator.last_item - item_count != paginator.total_items
     }
   end
+
+  def build_paginator_attrs("next", current_page, item_count, item_per_page, paginator) do
+    first_item = get_first_item_num(current_page, item_per_page)
+    last_item = get_last_item_num(first_item, item_count)
+
+    %{
+      first_item: first_item,
+      last_item: last_item,
+      page_item_count: item_count,
+      total_items: paginator.total_items,
+      has_prev_page?: current_page > 1,
+      has_next_page?: paginator.last_item + item_count != paginator.total_items
+    }
+  end
+
+  def build_paginator_attrs("init", item_count, total_items) do
+    %{
+      first_item: 1,
+      last_item: item_count,
+      page_item_count: item_count,
+      total_items: total_items,
+      has_prev_page?: false,
+      has_next_page?: total_items - item_count != total_items
+    }
+  end
+
+  defp get_first_item_num(current_page, item_per_page), do: (current_page - 1) * item_per_page + 1
+  defp get_last_item_num(first_item, item_count), do: first_item + item_count - 1
 end

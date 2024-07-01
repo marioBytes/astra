@@ -25,15 +25,7 @@ defmodule AstraWeb.TripLive.Index do
 
     total_trips = CarTrips.count_trips(current_user)
 
-    paginator =
-      build_paginator_attrs(%{
-        first_item: 1,
-        last_item: Enum.count(trips),
-        page_item_count: @per_page,
-        total_items: total_trips,
-        has_prev_page?: false,
-        has_next_page?: trips != total_trips
-      })
+    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
 
     {:ok,
      socket
@@ -84,18 +76,7 @@ defmodule AstraWeb.TripLive.Index do
         {AstraWeb.TripLive.FormComponent, {:saved, trip}},
         %{assigns: %{paginator: paginator}} = socket
       ) do
-    paginator =
-      build_paginator_attrs(%{
-        first_item: 1,
-        last_item: 10,
-        total_items: paginator.total_items + 1,
-        has_prev_page?: false,
-        has_next_page?: true
-      })
-
-    {:noreply,
-     stream_insert(socket, :trips, trip)
-     |> assign(:paginator, paginator)}
+    {:noreply, stream_insert(socket, :trips, trip)}
   end
 
   @impl true
@@ -157,14 +138,9 @@ defmodule AstraWeb.TripLive.Index do
         order: new_order
       )
 
-    paginator =
-      build_paginator_attrs(%{
-        first_item: 1,
-        last_item: Enum.count(trips),
-        total_items: paginator.total_items,
-        has_prev_page?: false,
-        has_next_page?: trips != paginator.total_items
-      })
+    total_trips = CarTrips.count_trips(current_user)
+
+    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
 
     {:noreply,
      stream(socket, :trips, trips, reset: true)
@@ -201,15 +177,7 @@ defmodule AstraWeb.TripLive.Index do
 
     amount_of_trips = Enum.count(trips)
 
-    paginator =
-      build_paginator_attrs(%{
-        first_item: paginator.first_item - amount_of_trips,
-        last_item: paginator.last_item - paginator.page_item_count,
-        page_item_count: amount_of_trips,
-        total_items: paginator.total_items,
-        has_prev_page?: new_page > 1,
-        has_next_page?: paginator.last_item - amount_of_trips != paginator.total_items
-      })
+    paginator = build_paginator_attrs("prev", new_page, amount_of_trips, @per_page, paginator)
 
     {:noreply,
      stream(socket, :trips, trips, reset: true)
@@ -243,15 +211,7 @@ defmodule AstraWeb.TripLive.Index do
 
     amount_of_trips = Enum.count(trips)
 
-    paginator =
-      build_paginator_attrs(%{
-        first_item: paginator.last_item + 1,
-        last_item: paginator.last_item + amount_of_trips,
-        page_item_count: amount_of_trips,
-        total_items: paginator.total_items,
-        has_prev_page?: new_page > 1,
-        has_next_page?: paginator.last_item + amount_of_trips != paginator.total_items
-      })
+    paginator = build_paginator_attrs("next", new_page, Enum.count(trips), @per_page, paginator)
 
     {:noreply,
      stream(socket, :trips, trips, reset: true)
