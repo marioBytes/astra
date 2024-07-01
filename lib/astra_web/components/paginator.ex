@@ -42,6 +42,7 @@ defmodule AstraWeb.Paginator do
   def build_paginator_attrs(%{
          first_item: first_item,
          last_item: last_item,
+         page_item_count: page_item_count,
          total_items: total_items,
          has_prev_page?: has_prev_page?,
          has_next_page?: has_next_page?
@@ -49,6 +50,7 @@ defmodule AstraWeb.Paginator do
     %{
       first_item: first_item,
       last_item: last_item,
+      page_item_count: page_item_count,
       total_items: total_items,
       has_prev_page?: has_prev_page?,
       has_next_page?: has_next_page?

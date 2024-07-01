@@ -29,6 +29,7 @@ defmodule AstraWeb.TripLive.Index do
       build_paginator_attrs(%{
         first_item: 1,
         last_item: Enum.count(trips),
+        page_item_count: @per_page,
         total_items: total_trips,
         has_prev_page?: false,
         has_next_page?: trips != total_trips
@@ -203,7 +204,8 @@ defmodule AstraWeb.TripLive.Index do
     paginator =
       build_paginator_attrs(%{
         first_item: paginator.first_item - amount_of_trips,
-        last_item: paginator.last_item - amount_of_trips,
+        last_item: paginator.last_item - paginator.page_item_count,
+        page_item_count: amount_of_trips,
         total_items: paginator.total_items,
         has_prev_page?: new_page > 1,
         has_next_page?: paginator.last_item - amount_of_trips != paginator.total_items
@@ -243,8 +245,9 @@ defmodule AstraWeb.TripLive.Index do
 
     paginator =
       build_paginator_attrs(%{
-        first_item: paginator.first_item + amount_of_trips,
+        first_item: paginator.last_item + 1,
         last_item: paginator.last_item + amount_of_trips,
+        page_item_count: amount_of_trips,
         total_items: paginator.total_items,
         has_prev_page?: new_page > 1,
         has_next_page?: paginator.last_item + amount_of_trips != paginator.total_items
