@@ -6,21 +6,19 @@ defmodule AstraWeb.TripLive.Index do
 
   import AstraWeb.Paginator
 
+  @page 1
   @per_page 10
+  @order "desc"
+  @order_by :trip_date
 
   @impl true
   def mount(_params, _session, %{assigns: %{current_user: current_user}} = socket) do
-    page = 1
-    per_page = @per_page
-    order_by = :trip_date
-    order = "desc"
-
     trips =
       CarTrips.list_trips(current_user,
-        per_page: per_page,
-        page: page,
-        order: order,
-        order_by: order_by
+        per_page: @per_page,
+        page: @page,
+        order: @order,
+        order_by: @order_by
       )
 
     total_trips = CarTrips.count_trips(current_user)
@@ -30,10 +28,7 @@ defmodule AstraWeb.TripLive.Index do
     {:ok,
      socket
      |> stream(:trips, trips)
-     |> assign(:per_page, per_page)
-     |> assign(:page, page)
-     |> assign(:order, order)
-     |> assign(:order_by, order_by)
+     |> assign_trip_order_init()
      |> assign(:paginator, paginator)}
   end
 
@@ -73,10 +68,26 @@ defmodule AstraWeb.TripLive.Index do
 
   @impl true
   def handle_info(
-        {AstraWeb.TripLive.FormComponent, {:saved, trip}},
-        %{assigns: %{paginator: paginator}} = socket
+        {AstraWeb.TripLive.FormComponent, {:saved, _trip}},
+        %{assigns: %{current_user: current_user}} = socket
       ) do
-    {:noreply, stream_insert(socket, :trips, trip)}
+    trips =
+      CarTrips.list_trips(current_user,
+        per_page: @per_page,
+        page: @page,
+        order: @order,
+        order_by: @order_by
+      )
+
+    total_trips = CarTrips.count_trips(current_user)
+
+    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
+
+    {:noreply,
+     socket
+     |> stream(:trips, trips, reset: true)
+     |> assign_trip_order_init()
+     |> assign(:paginator, paginator)}
   end
 
   @impl true
@@ -102,14 +113,7 @@ defmodule AstraWeb.TripLive.Index do
   def handle_event(
         "order-by",
         value,
-        %{
-          assigns: %{
-            current_user: current_user,
-            order_by: old_order_by,
-            order: order,
-            paginator: paginator
-          }
-        } = socket
+        %{assigns: %{current_user: current_user, order_by: old_order_by, order: order}} = socket
       ) do
     new_order_by =
       value["order-column"]
@@ -117,9 +121,6 @@ defmodule AstraWeb.TripLive.Index do
       |> Enum.join("_")
       |> String.downcase()
       |> String.to_atom()
-
-    page = 1
-    per_page = @per_page
 
     new_order =
       (fn
@@ -132,8 +133,8 @@ defmodule AstraWeb.TripLive.Index do
 
     trips =
       CarTrips.list_trips(current_user,
-        page: page,
-        per_page: per_page,
+        page: @page,
+        per_page: @per_page,
         order_by: new_order_by,
         order: new_order
       )
@@ -144,10 +145,7 @@ defmodule AstraWeb.TripLive.Index do
 
     {:noreply,
      stream(socket, :trips, trips, reset: true)
-     |> assign(page: page)
-     |> assign(per_page: per_page)
-     |> assign(order_by: new_order_by)
-     |> assign(order: new_order)
+     |> assign_trip_order_init(%{order: new_order, order_by: new_order_by})
      |> assign(paginator: paginator)}
   end
 
@@ -213,6 +211,22 @@ defmodule AstraWeb.TripLive.Index do
      stream(socket, :trips, trips, reset: true)
      |> assign(page: new_page)
      |> assign(paginator: paginator)}
+  end
+
+  defp assign_trip_order_init(socket) do
+    socket
+    |> assign(:per_page, @per_page)
+    |> assign(:page, @page)
+    |> assign(:order, @order)
+    |> assign(:order_by, @order_by)
+  end
+
+  defp assign_trip_order_init(socket, %{order_by: order_by, order: order}) do
+    socket
+    |> assign(:per_page, @per_page)
+    |> assign(:page, @page)
+    |> assign(:order, order)
+    |> assign(:order_by, order_by)
   end
 
   defp assign_current_user(socket) do
