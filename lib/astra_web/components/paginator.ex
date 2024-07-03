@@ -74,7 +74,7 @@ defmodule AstraWeb.Paginator do
       page_item_count: item_count,
       total_items: total_items,
       has_prev_page?: false,
-      has_next_page?: total_items - item_count != total_items
+      has_next_page?: item_count != total_items
     }
   end
 
