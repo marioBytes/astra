@@ -43,6 +43,27 @@ defmodule Astra.CarTrips do
   end
 
   @doc """
+  Returns the list of trips by user id, a start_date to an end_date, and by a set of criteria
+
+  ## Examples
+
+      iex> list_trips(1, ~D[2024-01-01], ~D[2024-06-01], page: 1, per_page: 25, "asc", :trip_date)
+      [%Trip{}, ...]
+
+  """
+  def list_trips_by_date(%User{} = current_user, start_date, end_date, criteria) do
+    query =
+      current_user.id
+      |> Queries.filter_by_user()
+      |> Queries.filter_by_date(start_date, end_date)
+
+    criteria
+    |> build_criteria(query)
+    |> build_query()
+    |> Repo.all()
+  end
+
+  @doc """
   Returns the count of user trips
 
   ## Examples
@@ -54,6 +75,23 @@ defmodule Astra.CarTrips do
   @spec count_trips(%User{}) :: integer()
   def count_trips(%User{} = current_user) do
     Queries.filter_by_user(current_user.id)
+    |> Repo.aggregate(:count)
+  end
+
+  @doc """
+  Returns the count of user trips
+
+  ## Examples
+
+      iex> count_trips(%User{})
+      80
+
+  """
+  @spec count_trips(%User{}, String.t(), String.t()) :: integer()
+  def count_trips(%User{} = current_user, start_date, end_date) do
+    current_user.id
+    |> Queries.filter_by_user()
+    |> Queries.filter_by_date(start_date, end_date)
     |> Repo.aggregate(:count)
   end
 
