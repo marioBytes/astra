@@ -7,16 +7,11 @@
   </:actions>
 </.header>
 
-<.simple_form for={@search_by_date_form} id="date-search" phx-change="update-date-search">
-  <div class="flex gap-4 flex-col sm:flex-row">
-    <div class="w-100 sm:w-1/2">
-      <.input field={@search_by_date_form[:start_date]} type="date" label="Start Date" />
-    </div>
-    <div class="w-100 sm:w-1/2">
-      <.input field={@search_by_date_form[:end_date]} type="date" label="End Date" />
-    </div>
-  </div>
-</.simple_form>
+<.live_component
+  id={:search_by_date}
+  search_by_date={@search_by_date}
+  module={AstraWeb.SearchLive.SearchByDateForm}
+/>
 
 <.table
   id="trips"

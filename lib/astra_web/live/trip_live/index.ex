@@ -3,7 +3,6 @@ defmodule AstraWeb.TripLive.Index do
 
   alias Astra.CarTrips
   alias Astra.CarTrips.Trip
-  alias Astra.Search
   alias Astra.Search.SearchByDate
 
   import AstraWeb.Paginator
@@ -27,15 +26,12 @@ defmodule AstraWeb.TripLive.Index do
 
     paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
 
-    changeset = Search.change_search_by_date(%SearchByDate{})
-
     {:ok,
      socket
      |> stream(:trips, trips)
      |> assign_trip_order_init()
      |> assign(:paginator, paginator)
-     |> assign(:search_by_date, %SearchByDate{start_date: nil, end_date: nil})
-     |> assign_search_by_date_form(changeset)}
+     |> assign_search_by_date(%SearchByDate{})}
   end
 
   @impl true
@@ -97,6 +93,55 @@ defmodule AstraWeb.TripLive.Index do
   end
 
   @impl true
+  def handle_info(
+        {AstraWeb.SearchLive.SearchByDateForm,
+         {:search_by_date_updated, %{start_date: start_date, end_date: end_date} = search_by_date}},
+        %{assigns: %{current_user: current_user}} = socket
+      ) do
+    trips =
+      CarTrips.list_trips_by_date(current_user, start_date, end_date,
+        page: @page,
+        per_page: @per_page,
+        order: @order,
+        order_by: @order_by
+      )
+
+    total_trips = CarTrips.count_trips(current_user, start_date, end_date)
+
+    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
+
+    {:noreply,
+     socket
+     |> stream(:trips, trips, reset: true)
+     |> assign_trip_order_init(%{order: "asc", order_by: @order_by})
+     |> assign(paginator: paginator)
+     |> assign_search_by_date(search_by_date)}
+  end
+
+  def handle_info(
+        {AstraWeb.SearchLive.SearchByDateForm, {:clear_search_by_date, _}},
+        %{assigns: %{current_user: current_user}} = socket
+      ) do
+    trips =
+      CarTrips.list_trips(current_user,
+        per_page: @per_page,
+        page: @page,
+        order: @order,
+        order_by: @order_by
+      )
+
+    total_trips = CarTrips.count_trips(current_user)
+
+    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
+
+    {:noreply,
+     socket
+     |> stream(:trips, trips, reset: true)
+     |> assign_search_by_date(%SearchByDate{})
+     |> assign(:paginator, paginator)}
+  end
+
+  @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     trip = CarTrips.get_trip!(id)
 
@@ -146,7 +191,7 @@ defmodule AstraWeb.TripLive.Index do
 
     trips =
       build_trip_query(current_user, search_by_date,
-        page: @new_page,
+        page: @page,
         per_page: @per_page,
         order_by: new_order_by,
         order: new_order
@@ -233,50 +278,6 @@ defmodule AstraWeb.TripLive.Index do
      |> assign(paginator: paginator)}
   end
 
-  def handle_event(
-        "update-date-search",
-        %{"search_by_date" => search_by_date},
-        socket
-      ) do
-    changeset =
-      %SearchByDate{}
-      |> Search.change_search_by_date(search_by_date)
-      |> Map.put(:action, :validate)
-
-    has_updated_start_date? = Map.has_key?(changeset.changes, :start_date)
-    has_updated_end_date? = Map.has_key?(changeset.changes, :end_date)
-
-    if changeset.valid? and has_updated_end_date? and has_updated_start_date? do
-      %{assigns: %{current_user: current_user}} = socket
-      %{changes: %{start_date: start_date, end_date: end_date}} = changeset
-
-      trips =
-        CarTrips.list_trips_by_date(current_user, start_date, end_date,
-          page: @page,
-          per_page: @per_page,
-          order: @order,
-          order_by: @order_by
-        )
-
-      total_trips = CarTrips.count_trips(current_user, start_date, end_date)
-
-      paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
-
-      {:noreply,
-       socket
-       |> stream(:trips, trips, reset: true)
-       |> assign_trip_order_init(%{order: "asc", order_by: @order_by})
-       |> assign(paginator: paginator)
-       |> assign_search_by_date_form(changeset)
-       |> assign_search_by_date(search_by_date)}
-    else
-      {:noreply,
-       socket
-       |> assign_search_by_date_form(changeset)
-       |> assign_search_by_date(search_by_date)}
-    end
-  end
-
   defp assign_trip_order_init(socket) do
     socket
     |> assign(:per_page, @per_page)
@@ -297,20 +298,8 @@ defmodule AstraWeb.TripLive.Index do
     assign(socket, :current_user, socket.assigns.current_user)
   end
 
-  defp assign_search_by_date_form(socket, changeset) do
-    assign(socket, :search_by_date_form, to_form(changeset))
-  end
-
-  defp assign_search_by_date(socket, %{"start_date" => start_date, "end_date" => end_date}) do
-    start_date = if start_date == "", do: nil, else: start_date
-    end_date = if end_date == "", do: nil, else: end_date
-
-    search_by_date_data =
-      Map.new()
-      |> Map.put(:start_date, start_date)
-      |> Map.put(:end_date, end_date)
-
-    assign(socket, :search_by_date, search_by_date_data)
+  defp assign_search_by_date(socket, search_by_date) do
+    assign(socket, :search_by_date, search_by_date)
   end
 
   defp build_trip_query(current_user, search_by_date, criteria) do
