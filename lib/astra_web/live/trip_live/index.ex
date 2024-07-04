@@ -29,7 +29,7 @@ defmodule AstraWeb.TripLive.Index do
     {:ok,
      socket
      |> stream(:trips, trips)
-     |> assign_trip_order_init()
+     |> assign_trip_order()
      |> assign(:paginator, paginator)
      |> assign_search_by_date(%SearchByDate{})}
   end
@@ -88,7 +88,7 @@ defmodule AstraWeb.TripLive.Index do
     {:noreply,
      socket
      |> stream(:trips, trips, reset: true)
-     |> assign_trip_order_init()
+     |> assign_trip_order()
      |> assign(:paginator, paginator)}
   end
 
@@ -113,7 +113,7 @@ defmodule AstraWeb.TripLive.Index do
     {:noreply,
      socket
      |> stream(:trips, trips, reset: true)
-     |> assign_trip_order_init(%{order: "asc", order_by: @order_by})
+     |> assign_trip_order(%{order: "asc", order_by: @order_by})
      |> assign(paginator: paginator)
      |> assign_search_by_date(search_by_date)}
   end
@@ -208,7 +208,7 @@ defmodule AstraWeb.TripLive.Index do
 
     {:noreply,
      stream(socket, :trips, trips, reset: true)
-     |> assign_trip_order_init(%{order: new_order, order_by: new_order_by})
+     |> assign_trip_order(%{order: new_order, order_by: new_order_by})
      |> assign(paginator: paginator)}
   end
 
@@ -278,7 +278,7 @@ defmodule AstraWeb.TripLive.Index do
      |> assign(paginator: paginator)}
   end
 
-  defp assign_trip_order_init(socket) do
+  defp assign_trip_order(socket) do
     socket
     |> assign(:per_page, @per_page)
     |> assign(:page, @page)
@@ -286,7 +286,7 @@ defmodule AstraWeb.TripLive.Index do
     |> assign(:order_by, @order_by)
   end
 
-  defp assign_trip_order_init(socket, %{order_by: order_by, order: order}) do
+  defp assign_trip_order(socket, %{order_by: order_by, order: order}) do
     socket
     |> assign(:per_page, @per_page)
     |> assign(:page, @page)
