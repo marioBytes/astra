@@ -41,7 +41,14 @@
   </:action>
 </.table>
 
-<.paginator paginator={@paginator} />
+<.live_component
+  id={:trip_paginator}
+  current_page={@page}
+  items={@streams.trips}
+  total_items={@total_trips}
+  items_per_page={@per_page}
+  module={AstraWeb.Paginator}
+/>
 
 <.modal :if={@live_action in [:new, :edit]} id="trip-modal" show on_cancel={JS.patch(~p"/trips")}>
   <.live_component

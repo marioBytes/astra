@@ -5,8 +5,6 @@ defmodule AstraWeb.TripLive.Index do
   alias Astra.CarTrips.Trip
   alias Astra.Search.SearchByDate
 
-  import AstraWeb.Paginator
-
   @page 1
   @per_page 10
   @order "desc"
@@ -24,13 +22,11 @@ defmodule AstraWeb.TripLive.Index do
 
     total_trips = CarTrips.count_trips(current_user)
 
-    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
-
     {:ok,
      socket
      |> stream(:trips, trips)
      |> assign_trip_order()
-     |> assign(:paginator, paginator)
+     |> assign(:total_trips, total_trips)
      |> assign_search_by_date(%SearchByDate{})}
   end
 
@@ -58,6 +54,7 @@ defmodule AstraWeb.TripLive.Index do
     socket
     |> assign(:page_title, "New Trip")
     |> assign(:trip, %Trip{user_id: socket.assigns.current_user.id})
+    |> assign(:total_trips, socket.assigns.total_trips + 1)
     |> assign_current_user()
   end
 
@@ -81,15 +78,10 @@ defmodule AstraWeb.TripLive.Index do
         order_by: @order_by
       )
 
-    total_trips = CarTrips.count_trips(current_user)
-
-    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
-
     {:noreply,
      socket
      |> stream(:trips, trips, reset: true)
-     |> assign_trip_order()
-     |> assign(:paginator, paginator)}
+     |> assign_trip_order()}
   end
 
   @impl true
@@ -108,16 +100,15 @@ defmodule AstraWeb.TripLive.Index do
 
     total_trips = CarTrips.count_trips(current_user, start_date, end_date)
 
-    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
-
     {:noreply,
      socket
      |> stream(:trips, trips, reset: true)
+     |> assign(:total_trips, total_trips)
      |> assign_trip_order(%{order: "asc", order_by: @order_by})
-     |> assign(paginator: paginator)
      |> assign_search_by_date(search_by_date)}
   end
 
+  @impl true
   def handle_info(
         {AstraWeb.SearchLive.SearchByDateForm, {:clear_search_by_date, _}},
         %{assigns: %{current_user: current_user}} = socket
@@ -132,13 +123,69 @@ defmodule AstraWeb.TripLive.Index do
 
     total_trips = CarTrips.count_trips(current_user)
 
-    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
-
     {:noreply,
      socket
      |> stream(:trips, trips, reset: true)
-     |> assign_search_by_date(%SearchByDate{})
-     |> assign(:paginator, paginator)}
+     |> assign(:total_trips, total_trips)
+     |> assign_search_by_date(%SearchByDate{})}
+  end
+
+  @impl true
+  def handle_info(
+        {AstraWeb.Paginator, {:prev_page, _}},
+        %{
+          assigns: %{
+            current_user: current_user,
+            order: order,
+            order_by: order_by,
+            page: page,
+            per_page: per_page,
+            search_by_date: search_by_date
+          }
+        } = socket
+      ) do
+    new_page = page - 1
+
+    trips =
+      build_trip_query(current_user, search_by_date,
+        page: new_page,
+        per_page: per_page,
+        order_by: order_by,
+        order: order
+      )
+
+    {:noreply,
+     stream(socket, :trips, trips, reset: true)
+     |> assign(page: new_page)}
+  end
+
+  @impl true
+  def handle_info(
+        {AstraWeb.Paginator, {:next_page, _}},
+        %{
+          assigns: %{
+            current_user: current_user,
+            order: order,
+            order_by: order_by,
+            page: page,
+            per_page: per_page,
+            search_by_date: search_by_date
+          }
+        } = socket
+      ) do
+    new_page = page + 1
+
+    trips =
+      build_trip_query(current_user, search_by_date,
+        page: new_page,
+        per_page: per_page,
+        order_by: order_by,
+        order: order
+      )
+
+    {:noreply,
+     stream(socket, :trips, trips, reset: true)
+     |> assign(page: new_page)}
   end
 
   @impl true
@@ -197,85 +244,9 @@ defmodule AstraWeb.TripLive.Index do
         order: new_order
       )
 
-    total_trips =
-      if is_nil(search_by_date.start_date) and is_nil(search_by_date.end_date) do
-        CarTrips.count_trips(current_user)
-      else
-        CarTrips.count_trips(current_user, search_by_date.start_date, search_by_date.end_date)
-      end
-
-    paginator = build_paginator_attrs("init", Enum.count(trips), total_trips)
-
     {:noreply,
      stream(socket, :trips, trips, reset: true)
-     |> assign_trip_order(%{order: new_order, order_by: new_order_by})
-     |> assign(paginator: paginator)}
-  end
-
-  def handle_event(
-        "prev-page",
-        _value,
-        %{
-          assigns: %{
-            current_user: current_user,
-            order: order,
-            order_by: order_by,
-            page: page,
-            per_page: per_page,
-            paginator: paginator,
-            search_by_date: search_by_date
-          }
-        } = socket
-      ) do
-    new_page = page - 1
-
-    trips =
-      build_trip_query(current_user, search_by_date,
-        page: new_page,
-        per_page: per_page,
-        order_by: order_by,
-        order: order
-      )
-
-    paginator = build_paginator_attrs("prev", new_page, Enum.count(trips), @per_page, paginator)
-
-    {:noreply,
-     stream(socket, :trips, trips, reset: true)
-     |> assign(page: new_page)
-     |> assign(paginator: paginator)}
-  end
-
-  def handle_event(
-        "next-page",
-        _value,
-        %{
-          assigns: %{
-            current_user: current_user,
-            order: order,
-            order_by: order_by,
-            page: page,
-            per_page: per_page,
-            paginator: paginator,
-            search_by_date: search_by_date
-          }
-        } = socket
-      ) do
-    new_page = page + 1
-
-    trips =
-      build_trip_query(current_user, search_by_date,
-        page: new_page,
-        per_page: per_page,
-        order_by: order_by,
-        order: order
-      )
-
-    paginator = build_paginator_attrs("next", new_page, Enum.count(trips), @per_page, paginator)
-
-    {:noreply,
-     stream(socket, :trips, trips, reset: true)
-     |> assign(page: new_page)
-     |> assign(paginator: paginator)}
+     |> assign_trip_order(%{order: new_order, order_by: new_order_by})}
   end
 
   defp assign_trip_order(socket) do
