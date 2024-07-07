@@ -273,16 +273,16 @@ defmodule AstraWeb.TripLive.Index do
     assign(socket, :search_by_date, search_by_date)
   end
 
-  defp build_trip_query(current_user, search_by_date, criteria) do
-    if is_nil(search_by_date.start_date) and is_nil(search_by_date.end_date) do
-      CarTrips.list_trips(current_user, criteria)
-    else
-      CarTrips.list_trips_by_date(
-        current_user,
-        search_by_date.start_date,
-        search_by_date.end_date,
-        criteria
-      )
-    end
+  defp build_trip_query(current_user, %{start_date: start_date, end_date: end_date}, criteria)
+       when not is_nil(start_date) and not is_nil(end_date) do
+    CarTrips.list_trips_by_date(
+      current_user,
+      start_date,
+      end_date,
+      criteria
+    )
   end
+
+  defp build_trip_query(current_user, _search_by_date, criteria),
+    do: CarTrips.list_trips(current_user, criteria)
 end
