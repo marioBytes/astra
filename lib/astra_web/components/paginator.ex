@@ -41,48 +41,42 @@ defmodule AstraWeb.Paginator do
   end
 
   @impl true
-  def update(
-        %{
-          items: items,
-          total_items: total_items,
-          current_page: current_page
-        } = assigns,
-        socket
-      ) do
-      {:ok,
-       socket
-       |> assign(assigns)
-       |> assign_paginator_items(items, total_items, current_page)}
+  def update(assigns, socket) do
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign_paginator_items()}
   end
 
   @impl true
-  def handle_event(
-        "prev-page",
-        _value,
-        %{assigns: %{items: items, total_items: total_items, current_page: current_page}} = socket
-      ) do
+  def handle_event("prev-page", _value, socket) do
     notify_parent({:prev_page, nil})
 
-    {:noreply, assign_paginator_items(socket, items, total_items, current_page)}
+    {:noreply, assign_paginator_items(socket)}
   end
 
   @impl true
-  def handle_event(
-        "next-page",
-        _value,
-        %{assigns: %{items: items, total_items: total_items, current_page: current_page}} = socket
-      ) do
+  def handle_event("next-page", _value, socket) do
     notify_parent({:next_page, nil})
 
-    {:noreply, assign_paginator_items(socket, items, total_items, current_page)}
+    {:noreply, assign_paginator_items(socket)}
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp assign_paginator_items(socket, items, total_items, current_page) do
+  defp assign_paginator_items(
+         %{
+           assigns: %{
+             current_page: current_page,
+             items: items,
+             items_per_page: items_per_page,
+             total_items: total_items
+           }
+         } = socket
+       ) do
     item_count = Enum.count(items)
 
-    first_item = get_first_item_num(current_page, socket.assigns.items_per_page)
+    first_item = get_first_item_num(current_page, items_per_page)
     last_item = get_last_item_num(first_item, item_count)
 
     has_prev_page? = current_page > 1
@@ -114,6 +108,8 @@ defmodule AstraWeb.Paginator do
     |> assign(:has_next_page?, has_next_page?)
   end
 
-  defp get_first_item_num(current_page, items_per_page), do: (current_page - 1) * items_per_page + 1
+  defp get_first_item_num(current_page, items_per_page),
+    do: (current_page - 1) * items_per_page + 1
+
   defp get_last_item_num(first_item, item_count), do: first_item + item_count - 1
 end
