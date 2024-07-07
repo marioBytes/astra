@@ -45,22 +45,14 @@ defmodule AstraWeb.Paginator do
         %{
           items: items,
           total_items: total_items,
-          current_page: current_page,
-          items_per_page: items_per_page
+          current_page: current_page
         } = assigns,
         socket
       ) do
-    if current_page == 1 do
-      {:ok,
-       socket
-       |> assign(assigns)
-       |> assign_paginator_items("init", items, items_per_page, total_items)}
-    else
       {:ok,
        socket
        |> assign(assigns)
        |> assign_paginator_items(items, total_items, current_page)}
-    end
   end
 
   @impl true
@@ -86,22 +78,6 @@ defmodule AstraWeb.Paginator do
   end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
-
-  defp assign_paginator_items(socket, "init", items, items_per_page, total_items) do
-    item_count = Enum.count(items)
-
-    first_item = 1
-    last_item = get_last_item_num(first_item, item_count)
-
-    assign_paginator_items(
-      socket,
-      first_item,
-      last_item,
-      total_items,
-      false,
-      item_count != total_items
-    )
-  end
 
   defp assign_paginator_items(socket, items, total_items, current_page) do
     item_count = Enum.count(items)
