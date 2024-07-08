@@ -1,7 +1,7 @@
 defmodule Astra.Search do
-  alias Astra.Search.SearchByDate
+  alias Astra.Search.TripSearch
 
-  def change_search_by_date(%SearchByDate{} = search, attrs \\ %{}) do
-    SearchByDate.changeset(search, attrs)
+  def change_trip_search(%TripSearch{} = search, attrs \\ %{}) do
+    TripSearch.changeset(search, attrs)
   end
 end

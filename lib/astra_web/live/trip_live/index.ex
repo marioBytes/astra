@@ -3,7 +3,7 @@ defmodule AstraWeb.TripLive.Index do
 
   alias Astra.CarTrips
   alias Astra.CarTrips.Trip
-  alias Astra.Search.SearchByDate
+  alias Astra.Search.TripSearch
 
   @page 1
   @per_page 10
@@ -27,7 +27,7 @@ defmodule AstraWeb.TripLive.Index do
      |> stream(:trips, trips)
      |> assign_trip_order()
      |> assign(:total_trips, total_trips)
-     |> assign_search_by_date(%SearchByDate{})}
+     |> assign_trip_search(%TripSearch{})}
   end
 
   @impl true
@@ -86,31 +86,30 @@ defmodule AstraWeb.TripLive.Index do
 
   @impl true
   def handle_info(
-        {AstraWeb.SearchLive.SearchByDateForm,
-         {:search_by_date_updated, %{start_date: start_date, end_date: end_date} = search_by_date}},
+        {AstraWeb.SearchLive.TripSearch, {:search_trips, trip_search}},
         %{assigns: %{current_user: current_user}} = socket
       ) do
     trips =
-      CarTrips.list_trips_by_date(current_user, start_date, end_date,
+      build_trip_query(current_user, trip_search,
         page: @page,
         per_page: @per_page,
         order: @order,
         order_by: @order_by
       )
 
-    total_trips = CarTrips.count_trips(current_user, start_date, end_date)
+    total_trips = build_trip_count_query(current_user, trip_search)
 
     {:noreply,
      socket
      |> stream(:trips, trips, reset: true)
      |> assign(:total_trips, total_trips)
      |> assign_trip_order(%{order: "asc", order_by: @order_by})
-     |> assign_search_by_date(search_by_date)}
+     |> assign_trip_search(trip_search)}
   end
 
   @impl true
   def handle_info(
-        {AstraWeb.SearchLive.SearchByDateForm, {:clear_search_by_date, _}},
+        {AstraWeb.SearchLive.TripSearch, {:clear_trip_search, _}},
         %{assigns: %{current_user: current_user}} = socket
       ) do
     trips =
@@ -127,7 +126,8 @@ defmodule AstraWeb.TripLive.Index do
      socket
      |> stream(:trips, trips, reset: true)
      |> assign(:total_trips, total_trips)
-     |> assign_search_by_date(%SearchByDate{})}
+     |> assign(:page, 1)
+     |> assign_trip_search(%TripSearch{})}
   end
 
   @impl true
@@ -140,14 +140,14 @@ defmodule AstraWeb.TripLive.Index do
             order_by: order_by,
             page: page,
             per_page: per_page,
-            search_by_date: search_by_date
+            trip_search: trip_search
           }
         } = socket
       ) do
     new_page = page - 1
 
     trips =
-      build_trip_query(current_user, search_by_date,
+      build_trip_query(current_user, trip_search,
         page: new_page,
         per_page: per_page,
         order_by: order_by,
@@ -169,14 +169,14 @@ defmodule AstraWeb.TripLive.Index do
             order_by: order_by,
             page: page,
             per_page: per_page,
-            search_by_date: search_by_date
+            trip_search: trip_search
           }
         } = socket
       ) do
     new_page = page + 1
 
     trips =
-      build_trip_query(current_user, search_by_date,
+      build_trip_query(current_user, trip_search,
         page: new_page,
         per_page: per_page,
         order_by: order_by,
@@ -208,6 +208,7 @@ defmodule AstraWeb.TripLive.Index do
     end
   end
 
+  @impl true
   def handle_event(
         "order-by",
         value,
@@ -216,7 +217,7 @@ defmodule AstraWeb.TripLive.Index do
             current_user: current_user,
             order_by: old_order_by,
             order: order,
-            search_by_date: search_by_date
+            trip_search: trip_search
           }
         } = socket
       ) do
@@ -237,7 +238,7 @@ defmodule AstraWeb.TripLive.Index do
        end).(new_order_by, old_order_by, order)
 
     trips =
-      build_trip_query(current_user, search_by_date,
+      build_trip_query(current_user, trip_search,
         page: @page,
         per_page: @per_page,
         order_by: new_order_by,
@@ -269,12 +270,24 @@ defmodule AstraWeb.TripLive.Index do
     assign(socket, :current_user, socket.assigns.current_user)
   end
 
-  defp assign_search_by_date(socket, search_by_date) do
-    assign(socket, :search_by_date, search_by_date)
+  defp assign_trip_search(socket, trip_search) do
+    assign(socket, :trip_search, trip_search)
   end
 
-  defp build_trip_query(current_user, %{start_date: start_date, end_date: end_date}, criteria)
-       when not is_nil(start_date) and not is_nil(end_date) do
+  defp build_trip_query(
+         current_user,
+         %{start_date: start_date, end_date: end_date, trip_purpose: trip_purpose},
+         criteria
+       )
+       when is_nil(start_date) or (is_nil(end_date) and not is_nil(trip_purpose)) do
+    CarTrips.list_trips_by_trip_purpose(current_user, trip_purpose, criteria)
+  end
+
+  defp build_trip_query(
+         current_user,
+         %{start_date: start_date, end_date: end_date, trip_purpose: nil},
+         criteria
+       ) do
     CarTrips.list_trips_by_date(
       current_user,
       start_date,
@@ -283,6 +296,45 @@ defmodule AstraWeb.TripLive.Index do
     )
   end
 
-  defp build_trip_query(current_user, _search_by_date, criteria),
+  defp build_trip_query(
+         current_user,
+         %{start_date: start_date, end_date: end_date, trip_purpose: trip_purpose},
+         criteria
+       ) do
+    CarTrips.list_trips_by_date_and_purpose(
+      current_user,
+      start_date,
+      end_date,
+      trip_purpose,
+      criteria
+    )
+  end
+
+  defp build_trip_query(current_user, _trip_search, criteria),
     do: CarTrips.list_trips(current_user, criteria)
+
+  defp build_trip_count_query(current_user, %{
+         start_date: start_date,
+         end_date: end_date,
+         trip_purpose: trip_purpose
+       })
+       when is_nil(start_date) or (is_nil(end_date) and not is_nil(trip_purpose)) do
+    CarTrips.count_trips(current_user, trip_purpose)
+  end
+
+  defp build_trip_count_query(current_user, %{
+         start_date: start_date,
+         end_date: end_date,
+         trip_purpose: nil
+       }) do
+    CarTrips.count_trips(current_user, start_date, end_date)
+  end
+
+  defp build_trip_count_query(current_user, %{
+         start_date: start_date,
+         end_date: end_date,
+         trip_purpose: trip_purpose
+       }) do
+    CarTrips.count_trips(current_user, start_date, end_date, trip_purpose)
+  end
 end

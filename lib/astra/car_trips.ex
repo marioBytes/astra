@@ -64,6 +64,48 @@ defmodule Astra.CarTrips do
   end
 
   @doc """
+  Returns the list of trips by user id, a trip_purpose, and by a set of criteria
+
+  ## Examples
+
+      iex> list_trips(1, :Personal, page: 1, per_page: 25, "asc", :trip_date)
+      [%Trip{}, ...]
+
+  """
+  def list_trips_by_trip_purpose(%User{} = current_user, purpose, criteria) do
+    query =
+      current_user.id
+      |> Queries.filter_by_user()
+      |> Queries.filter_by_purpose(purpose)
+
+    criteria
+    |> build_criteria(query)
+    |> build_query()
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns the list of trips by user id, a start_date to an end_date, a trip_purpose, and by a set of criteria
+
+  ## Examples
+
+      iex> list_trips(1, ~D[2024-01-01], ~D[2024-06-01], :Personal, page: 1, per_page: 25, "asc", :trip_date)
+      [%Trip{}, ...]
+
+  """
+  def list_trips_by_date_and_purpose(%User{} = current_user, start_date, end_date, purpose, criteria) do
+    query =
+      current_user.id
+      |> Queries.filter_by_user()
+      |> Queries.filter_by_date_and_purpose(start_date, end_date, purpose)
+
+    criteria
+    |> build_criteria(query)
+    |> build_query()
+    |> Repo.all()
+  end
+
+  @doc """
   Returns the count of user trips
 
   ## Examples
@@ -95,49 +137,19 @@ defmodule Astra.CarTrips do
     |> Repo.aggregate(:count)
   end
 
-  @doc """
-  Returns a list of trips within a date range YYYY-MM-DD
-
-  ## Examples
-
-      iex> list_trips_by_date(1, ~D[2024-01-01], ~D[2024-02-28])
-      [%Trip{}, ...]
-  """
-  def list_trips_by_date(user_id, start_date, end_date) do
-    user_id
-    |> Queries.filter_by_user()
-    |> Queries.filter_by_date(start_date, end_date)
-    |> Repo.all()
-  end
-
-  @doc """
-  Returns a list of trips by trip purpose
-
-  ## Examples
-
-      iex> list_trips_by_purpose(1, "Business")
-      [%Trip{}, ...]
-  """
-  def list_trips_by_purpose(user_id, purpose) do
-    user_id
+  def count_trips(%User{} = current_user, purpose) do
+    current_user.id
     |> Queries.filter_by_user()
     |> Queries.filter_by_purpose(purpose)
-    |> Repo.all()
+    |> Repo.aggregate(:count)
   end
 
-  @doc """
-  Returns a list of trips within a date range YYYY-MM-DD and by trip purpose
-
-  ## Examples
-
-      iex> list_trips_by_date_and_purpose(1, ~D[2024-01-01], ~D[2024-02-28], "Business")
-      [%Trip{}, ...]
-  """
-  def list_trips_by_date_and_purpose(user_id, start_date, end_date, purpose) do
-    user_id
+  def count_trips(%User{} = current_user, start_date, end_date, purpose) do
+    current_user.id
     |> Queries.filter_by_user()
-    |> Queries.filter_by_date_and_purpose(start_date, end_date, purpose)
-    |> Repo.all()
+    |> Queries.filter_by_date(start_date, end_date)
+    |> Queries.filter_by_purpose(purpose)
+    |> Repo.aggregate(:count)
   end
 
   @doc """

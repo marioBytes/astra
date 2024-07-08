@@ -1,15 +1,16 @@
-defmodule Astra.Search.SearchByDate do
+defmodule Astra.Search.TripSearch do
   use Ecto.Schema
   import Ecto.Changeset
 
-  schema "search_by_date" do
+  schema "trip_search" do
     field :start_date, :date
     field :end_date, :date
+    field :trip_purpose, :string
   end
 
-  def changeset(search_by_date, attrs) do
-    search_by_date
-    |> cast(attrs, [:start_date, :end_date])
+  def changeset(trip_search, attrs) do
+    trip_search
+    |> cast(attrs, [:start_date, :end_date, :trip_purpose])
     |> maybe_validate_start_date_is_before_end_date()
   end
 

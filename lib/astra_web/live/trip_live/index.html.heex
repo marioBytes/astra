@@ -2,15 +2,15 @@
   Your Trip History
   <:actions>
     <.link patch={~p"/trips/new"}>
-      <.button>New Trip</.button>
+      <.button_primary>New Trip</.button_primary>
     </.link>
   </:actions>
 </.header>
 
 <.live_component
-  id={:search_by_date}
-  search_by_date={@search_by_date}
-  module={AstraWeb.SearchLive.SearchByDateForm}
+  id={:trip_search}
+  trip_search={@trip_search}
+  module={AstraWeb.SearchLive.TripSearch}
 />
 
 <.table
