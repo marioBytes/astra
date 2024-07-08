@@ -22,16 +22,16 @@ defmodule AstraWeb.Paginator do
         <div class="flex gap-3">
           <div>
             <%= if @has_prev_page? do %>
-              <.button phx-click="prev-page" phx-target={@myself}>Previous</.button>
+              <.button_primary phx-click="prev-page" phx-target={@myself}>Previous</.button_primary>
             <% else %>
-              <.button disabled>Previous</.button>
+              <.button_primary disabled>Previous</.button_primary>
             <% end %>
           </div>
           <div>
             <%= if @has_next_page? do %>
-              <.button phx-click="next-page" phx-target={@myself}>Next</.button>
+              <.button_primary phx-click="next-page" phx-target={@myself}>Next</.button_primary>
             <% else %>
-              <.button disabled>Next</.button>
+              <.button_primary disabled>Next</.button_primary>
             <% end %>
           </div>
         </div>

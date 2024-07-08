@@ -30,7 +30,7 @@ defmodule AstraWeb.TripLive.FormComponent do
           value={@default_value}
         />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Trip</.button>
+          <.button_primary phx-disable-with="Saving...">Save Trip</.button_primary>
         </:actions>
       </.simple_form>
     </div>
