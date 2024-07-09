@@ -37,7 +37,11 @@ defmodule AstraWeb.SearchLive.TripSearch do
       </.simple_form>
       <div class="flex">
         <div class="ml-auto">
-          <.button_primary phx-click="search" phx-target={@myself}>Search</.button_primary>
+          <%= if @disable_buttons do %>
+            <.button_primary disabled>Search</.button_primary>
+          <% else %>
+            <.button_primary phx-click="search" phx-target={@myself}>Search</.button_primary>
+          <% end %>
           <.button_secondary phx-click="clear" phx-target={@myself}>Clear</.button_secondary>
         </div>
       </div>
@@ -61,6 +65,7 @@ defmodule AstraWeb.SearchLive.TripSearch do
      |> assign(assigns)
      |> assign(:options, options)
      |> assign_form(changeset)
+     |> assign_disable_buttons()
      |> assign(:trip_search, trip_search)}
   end
 
@@ -73,12 +78,17 @@ defmodule AstraWeb.SearchLive.TripSearch do
 
     case apply_action(changeset, :update) do
       {:ok, trip_search} ->
-        changeset = Search.change_trip_search(trip_search)
-
-        {:noreply, socket |> assign_form(changeset) |> assign(:trip_search, trip_search)}
+        {:noreply,
+         socket
+         |> assign_form(changeset)
+         |> assign(:trip_search, trip_search)
+         |> assign_disable_buttons()}
 
       {:error, changeset} ->
-        {:noreply, assign_form(socket, changeset)}
+        {:noreply,
+         socket
+         |> assign_form(changeset)
+         |> assign(:disable_buttons, true)}
     end
   end
 
@@ -120,5 +130,48 @@ defmodule AstraWeb.SearchLive.TripSearch do
 
   defp assign_form(socket, changeset) do
     assign(socket, :trip_search_form, to_form(changeset))
+  end
+
+  defp assign_disable_buttons(
+         %{assigns: %{trip_search: %{start_date: nil, end_date: nil, trip_purpose: nil}}} = socket
+       ) do
+    assign(socket, :disable_buttons, true)
+  end
+
+  defp assign_disable_buttons(
+         %{
+           assigns: %{
+             trip_search: %{start_date: start_date, end_date: end_date, trip_purpose: nil}
+           }
+         } = socket
+       )
+       when (is_nil(start_date) and not is_nil(end_date)) or
+              (not is_nil(start_date) and is_nil(end_date)) do
+    assign(socket, :disable_buttons, true)
+  end
+
+  defp assign_disable_buttons(
+         %{
+           assigns: %{
+             trip_search: %{start_date: nil, end_date: nil, trip_purpose: trip_purpose}
+           }
+         } = socket
+       )
+       when not is_nil(trip_purpose) do
+    assign(socket, :disable_buttons, false)
+  end
+
+  defp assign_disable_buttons(
+         %{
+           assigns: %{
+             trip_search: %{
+               start_date: start_date,
+               end_date: end_date,
+               trip_purpose: trip_purpose
+             }
+           }
+         } = socket
+       ) do
+    assign(socket, :disable_buttons, false)
   end
 end
