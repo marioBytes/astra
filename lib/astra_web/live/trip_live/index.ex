@@ -276,10 +276,17 @@ defmodule AstraWeb.TripLive.Index do
 
   defp build_trip_query(
          current_user,
+         %{start_date: nil, end_date: nil, trip_purpose: nil},
+         criteria
+       ),
+       do: CarTrips.list_trips(current_user, criteria)
+
+  defp build_trip_query(
+         current_user,
          %{start_date: start_date, end_date: end_date, trip_purpose: trip_purpose},
          criteria
        )
-       when is_nil(start_date) or (is_nil(end_date) and not is_nil(trip_purpose)) do
+       when (is_nil(start_date) or is_nil(end_date)) and not is_nil(trip_purpose) do
     CarTrips.list_trips_by_trip_purpose(current_user, trip_purpose, criteria)
   end
 
@@ -310,15 +317,12 @@ defmodule AstraWeb.TripLive.Index do
     )
   end
 
-  defp build_trip_query(current_user, _trip_search, criteria),
-    do: CarTrips.list_trips(current_user, criteria)
-
   defp build_trip_count_query(current_user, %{
          start_date: start_date,
          end_date: end_date,
          trip_purpose: trip_purpose
        })
-       when is_nil(start_date) or (is_nil(end_date) and not is_nil(trip_purpose)) do
+       when (is_nil(start_date) or is_nil(end_date)) and not is_nil(trip_purpose) do
     CarTrips.count_trips(current_user, trip_purpose)
   end
 
