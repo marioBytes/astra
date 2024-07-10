@@ -137,6 +137,7 @@ defmodule Astra.CarTrips do
     |> Repo.aggregate(:count)
   end
 
+  @spec count_trips(%User{}, String.t()) :: integer()
   def count_trips(%User{} = current_user, purpose) do
     current_user.id
     |> Queries.filter_by_user()
@@ -144,6 +145,7 @@ defmodule Astra.CarTrips do
     |> Repo.aggregate(:count)
   end
 
+  @spec count_trips(%User{}, String.t(), String.t(), String.t()) :: integer()
   def count_trips(%User{} = current_user, start_date, end_date, purpose) do
     current_user.id
     |> Queries.filter_by_user()

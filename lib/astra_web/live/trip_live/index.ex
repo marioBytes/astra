@@ -27,7 +27,8 @@ defmodule AstraWeb.TripLive.Index do
      |> stream(:trips, trips)
      |> assign_trip_order()
      |> assign(:total_trips, total_trips)
-     |> assign_trip_search(%TripSearch{})}
+     |> assign_trip_search(%TripSearch{})
+     |> assign_max_page()}
   end
 
   @impl true
@@ -81,7 +82,8 @@ defmodule AstraWeb.TripLive.Index do
     {:noreply,
      socket
      |> stream(:trips, trips, reset: true)
-     |> assign_trip_order()}
+     |> assign_trip_order()
+     |> assign_max_page()}
   end
 
   @impl true
@@ -189,12 +191,48 @@ defmodule AstraWeb.TripLive.Index do
   end
 
   @impl true
-  def handle_event("delete", %{"id" => id}, socket) do
+  def handle_event(
+        "delete",
+        %{"id" => id},
+        %{
+          assigns: %{
+            current_user: current_user,
+            trip_search: trip_search,
+            total_trips: total_trips,
+            page: page,
+            per_page: per_page,
+            order: order,
+            order_by: order_by
+          }
+        } = socket
+      ) do
     trip = CarTrips.get_trip!(id)
 
-    case CarTrips.delete_trip(socket.assigns.current_user, trip) do
+    case CarTrips.delete_trip(current_user, trip) do
       {:ok, _} ->
-        {:noreply, stream_delete(socket, :trips, trip)}
+        new_max_page = calc_max_page(total_trips - 1, per_page)
+
+        new_page =
+          if page > new_max_page do
+            page - 1
+          else
+            page
+          end
+
+        trips =
+          build_trip_query(current_user, trip_search,
+            page: new_page,
+            per_page: per_page,
+            order: order,
+            order_by: order_by
+          )
+
+        {:noreply,
+         socket
+         |> stream(:trips, trips, reset: true)
+         |> assign(:total_trips, total_trips - 1)
+         |> assign(:page, new_page)
+         |> assign(:max_page, new_max_page)}
 
       {:error, %Ecto.Changeset{}} ->
         {:noreply,
@@ -340,5 +378,17 @@ defmodule AstraWeb.TripLive.Index do
          trip_purpose: trip_purpose
        }) do
     CarTrips.count_trips(current_user, start_date, end_date, trip_purpose)
+  end
+
+  defp assign_max_page(%{assigns: %{total_trips: total_trips, per_page: per_page}} = socket) do
+    max_page = calc_max_page(total_trips, per_page)
+
+    assign(socket, :max_page, max_page)
+  end
+
+  defp calc_max_page(total_trips, per_page) do
+    {max_page, _} = Float.ceil(total_trips / per_page) |> Float.to_string() |> Integer.parse()
+
+    max_page
   end
 end
