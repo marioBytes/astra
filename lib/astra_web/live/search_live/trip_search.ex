@@ -161,17 +161,7 @@ defmodule AstraWeb.SearchLive.TripSearch do
     assign(socket, :disable_buttons, false)
   end
 
-  defp assign_disable_buttons(
-         %{
-           assigns: %{
-             trip_search: %{
-               start_date: start_date,
-               end_date: end_date,
-               trip_purpose: trip_purpose
-             }
-           }
-         } = socket
-       ) do
+  defp assign_disable_buttons(socket) do
     assign(socket, :disable_buttons, false)
   end
 end
