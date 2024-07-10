@@ -55,7 +55,6 @@ defmodule AstraWeb.TripLive.Index do
     socket
     |> assign(:page_title, "New Trip")
     |> assign(:trip, %Trip{user_id: socket.assigns.current_user.id})
-    |> assign(:total_trips, socket.assigns.total_trips + 1)
     |> assign_current_user()
   end
 
@@ -83,6 +82,7 @@ defmodule AstraWeb.TripLive.Index do
      socket
      |> stream(:trips, trips, reset: true)
      |> assign_trip_order()
+     |> assign(:total_trips, socket.assigns.total_trips + 1)
      |> assign_max_page()}
   end
 
