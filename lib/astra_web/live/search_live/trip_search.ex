@@ -118,10 +118,10 @@ defmodule AstraWeb.SearchLive.TripSearch do
   end
 
   @impl true
-  def handle_event("clear", _value, %{assigns: %{trip_search: trip_search}} = socket) do
+  def handle_event("clear", _value, socket) do
     changeset = Search.change_trip_search(%TripSearch{}, %{})
 
-    notify_parent({:clear_trip_search, trip_search})
+    notify_parent({:clear_trip_search, nil})
 
     {:noreply, assign_form(socket, changeset)}
   end
