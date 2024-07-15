@@ -3,7 +3,7 @@ defmodule AstraWeb.TripLive.Index do
 
   alias Astra.CarTrips
   alias Astra.CarTrips.Trip
-  alias Astra.Search.TripSearch
+  alias Astra.Search.{ItemsPerPage, TripSearch}
 
   @page 1
   @per_page 10
@@ -28,6 +28,7 @@ defmodule AstraWeb.TripLive.Index do
      |> assign_trip_order()
      |> assign(:total_trips, total_trips)
      |> assign_trip_search(%TripSearch{})
+     |> assign_items_per_page(%ItemsPerPage{item_limit: @per_page})
      |> assign_max_page()}
   end
 
@@ -89,12 +90,12 @@ defmodule AstraWeb.TripLive.Index do
   @impl true
   def handle_info(
         {AstraWeb.SearchLive.TripSearch, {:search_trips, trip_search}},
-        %{assigns: %{current_user: current_user}} = socket
+        %{assigns: %{current_user: current_user, per_page: per_page}} = socket
       ) do
     trips =
       build_trip_query(current_user, trip_search,
         page: @page,
-        per_page: @per_page,
+        per_page: per_page,
         order: @order,
         order_by: @order_by
       )
@@ -112,11 +113,11 @@ defmodule AstraWeb.TripLive.Index do
   @impl true
   def handle_info(
         {AstraWeb.SearchLive.TripSearch, {:clear_trip_search, _}},
-        %{assigns: %{current_user: current_user}} = socket
+        %{assigns: %{current_user: current_user, per_page: per_page}} = socket
       ) do
     trips =
       CarTrips.list_trips(current_user,
-        per_page: @per_page,
+        per_page: per_page,
         page: @page,
         order: @order,
         order_by: @order_by
@@ -191,6 +192,52 @@ defmodule AstraWeb.TripLive.Index do
   end
 
   @impl true
+  def handle_info(
+        {AstraWeb.Paginator, {:update_items_per_page, new_per_page}},
+        %{
+          assigns: %{
+            current_user: current_user,
+            order: order,
+            order_by: order_by,
+            page: page,
+            trip_search: trip_search,
+            total_trips: total_trips,
+            max_page: max_page
+          }
+        } = socket
+      ) do
+    new_max_page = calc_max_page(total_trips, new_per_page)
+
+    new_page =
+      cond do
+        new_per_page >= total_trips ->
+          1
+
+        new_max_page > max_page ->
+          new_max_page
+
+        true ->
+          page
+      end
+
+    trips =
+      build_trip_query(current_user, trip_search,
+        page: new_page,
+        per_page: new_per_page,
+        order: order,
+        order_by: order_by,
+        trip_search: trip_search
+      )
+
+    {:noreply,
+     stream(socket, :trips, trips, reset: true)
+     |> assign(:page, new_page)
+     |> assign(:per_page, new_per_page)
+     |> assign_items_per_page(%ItemsPerPage{item_limit: new_per_page})
+     |> assign_max_page()}
+  end
+
+  @impl true
   def handle_event(
         "delete",
         %{"id" => id},
@@ -255,6 +302,7 @@ defmodule AstraWeb.TripLive.Index do
             current_user: current_user,
             order_by: old_order_by,
             order: order,
+            per_page: per_page,
             trip_search: trip_search
           }
         } = socket
@@ -278,7 +326,7 @@ defmodule AstraWeb.TripLive.Index do
     trips =
       build_trip_query(current_user, trip_search,
         page: @page,
-        per_page: @per_page,
+        per_page: per_page,
         order_by: new_order_by,
         order: new_order
       )
@@ -296,10 +344,15 @@ defmodule AstraWeb.TripLive.Index do
     |> assign(:order_by, @order_by)
   end
 
-  defp assign_trip_order(socket, %{order_by: order_by, order: order}) do
+  defp assign_trip_order(socket, params) do
+    per_page = if Map.has_key?(params, :per_page), do: params.per_page, else: socket.assigns.per_page
+    page = if Map.has_key?(params, :page), do: params.page, else: socket.assigns.page
+    order = if Map.has_key?(params, :order), do: params.order, else: socket.assigns.order
+    order_by = if Map.has_key?(params, :order_by), do: params.order_by, else: socket.assigns.order_by
+
     socket
-    |> assign(:per_page, @per_page)
-    |> assign(:page, @page)
+    |> assign(:per_page, per_page)
+    |> assign(:page, page)
     |> assign(:order, order)
     |> assign(:order_by, order_by)
   end
@@ -310,6 +363,10 @@ defmodule AstraWeb.TripLive.Index do
 
   defp assign_trip_search(socket, trip_search) do
     assign(socket, :trip_search, trip_search)
+  end
+
+  defp assign_items_per_page(socket, items_per_page) do
+    assign(socket, :items_per_page, items_per_page)
   end
 
   defp build_trip_query(
