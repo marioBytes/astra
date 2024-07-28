@@ -27,7 +27,6 @@ defmodule AstraWeb.TripLive.FormComponent do
           type="select"
           label="Trip purpose"
           options={@options}
-          value={@default_value}
         />
         <:actions>
           <.button_primary phx-disable-with="Saving...">Save Trip</.button_primary>
@@ -46,7 +45,6 @@ defmodule AstraWeb.TripLive.FormComponent do
      |> assign(assigns)
      |> assign_form(changeset)
      |> assign_options()
-     |> assign_default_option(changeset)
      |> assign(current_user: assigns.current_user)}
   end
 
@@ -112,11 +110,17 @@ defmodule AstraWeb.TripLive.FormComponent do
     assign(socket, :form, to_form(changeset))
   end
 
-  defp assign_options(socket),
-    do: socket |> assign(:options, Personal: :Personal, Business: :Business, Other: :Other)
+  defp assign_options(socket) do
+    options =
+      [
+        [key: "Select trip purpose", value: "", disabled: true, selected: true],
+        [key: "Personal", value: :Personal],
+        [key: "Business", value: :Business],
+        [key: "Other", value: :Other]
+      ]
 
-  defp assign_default_option(socket, %{data: %{trip_purpose: purpose}}),
-    do: assign(socket, :default_value, purpose)
+    socket |> assign(:options, options)
+  end
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
