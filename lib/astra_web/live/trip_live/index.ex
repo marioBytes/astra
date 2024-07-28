@@ -112,7 +112,7 @@ defmodule AstraWeb.TripLive.Index do
 
   @impl true
   def handle_info(
-        {AstraWeb.SearchLive.TripSearch, {:clear_trip_search, _}},
+        {AstraWeb.SearchLive.TripSearch, {:reset_trip_search, _}},
         %{assigns: %{current_user: current_user, per_page: per_page}} = socket
       ) do
     trips =

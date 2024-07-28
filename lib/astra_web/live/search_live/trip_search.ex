@@ -42,7 +42,7 @@ defmodule AstraWeb.SearchLive.TripSearch do
           <% else %>
             <.button_primary phx-click="search" phx-target={@myself}>Search</.button_primary>
           <% end %>
-          <.button_secondary phx-click="clear" phx-target={@myself}>Clear</.button_secondary>
+          <.button_secondary phx-click="reset" phx-target={@myself}>Reset</.button_secondary>
         </div>
       </div>
     </div>
@@ -110,7 +110,7 @@ defmodule AstraWeb.SearchLive.TripSearch do
 
   @impl true
   def handle_event(
-        "clear",
+        "reset",
         _value,
         %{assigns: %{trip_search: %{start_date: nil, end_date: nil, trip_purpose: nil}}} = socket
       ) do
@@ -118,10 +118,10 @@ defmodule AstraWeb.SearchLive.TripSearch do
   end
 
   @impl true
-  def handle_event("clear", _value, socket) do
+  def handle_event("reset", _value, socket) do
     changeset = Search.change_trip_search(%TripSearch{}, %{})
 
-    notify_parent({:clear_trip_search, nil})
+    notify_parent({:reset_trip_search, nil})
 
     {:noreply, assign_form(socket, changeset)}
   end
