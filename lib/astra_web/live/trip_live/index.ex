@@ -5,6 +5,8 @@ defmodule AstraWeb.TripLive.Index do
   alias Astra.CarTrips.Trip
   alias Astra.Search.{ItemsPerPage, TripSearch}
 
+  alias Phoenix.LiveView.JS
+
   @page 1
   @per_page 25
   @order "desc"
@@ -29,7 +31,8 @@ defmodule AstraWeb.TripLive.Index do
      |> assign(:total_trips, total_trips)
      |> assign_trip_search(%TripSearch{})
      |> assign_items_per_page(%ItemsPerPage{item_limit: @per_page})
-     |> assign_max_page()}
+     |> assign_max_page()
+     |> assign_show_filter(true)}
   end
 
   @impl true
@@ -288,6 +291,15 @@ defmodule AstraWeb.TripLive.Index do
     {:noreply,
      stream(socket, :trips, trips, reset: true)
      |> assign_trip_order(%{order: new_order, order_by: new_order_by})}
+  end
+
+  @impl true
+  def handle_event("toggle-filter-show", _value, %{assigns: %{show_filters?: show_filters?}} = socket) do
+    {:noreply, assign_show_filter(socket, not show_filters?)}
+  end
+
+  defp assign_show_filter(socket, show?) do
+    assign(socket, :show_filters?, show?)
   end
 
   defp assign_trip_order(socket) do

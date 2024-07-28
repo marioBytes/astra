@@ -279,6 +279,25 @@ defmodule AstraWeb.CoreComponents do
     """
   end
 
+  attr :type, :string, default: nil
+  attr :class, :string, default: nil
+  attr :name, :string, default: "hero-x-circle"
+  attr :rest, :global, include: ~w(disabled form name value)
+
+  slot :inner_block, required: true
+
+  def button_icon(assigns) do
+    ~H"""
+    <.button_base
+      type={@type}
+      class="bg-white hover:bg-zinc-200 text-zinc-900 active:text-zinc/80 disabled:text-zinc-500 flex items-center"
+      {@rest}
+    >
+      <%= render_slot(@inner_block) %> <.icon class="ml-1" name={@name} />
+    </.button_base>
+    """
+  end
+
   @doc """
   Renders an input with label and error messages.
 

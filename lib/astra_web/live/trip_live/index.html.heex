@@ -7,11 +7,29 @@
   </:actions>
 </.header>
 
-<.live_component
-  id={:trip_search}
-  trip_search={@trip_search}
-  module={AstraWeb.SearchLive.TripSearch}
-/>
+<%= if not @show_filters? do %>
+  <div class="my-8">
+    <.button_icon phx-click="toggle-filter-show" name="hero-plus-circle">
+      Show Filters
+    </.button_icon>
+  </div>
+<% else %>
+  <div class="my-8 flex flex-col">
+    <div>
+      <.button_icon phx-click="toggle-filter-show" name="hero-minus-circle">
+        Hide Filters
+      </.button_icon>
+    </div>
+
+    <div>
+      <.live_component
+        id={:trip_search}
+        trip_search={@trip_search}
+        module={AstraWeb.SearchLive.TripSearch}
+      />
+    </div>
+  </div>
+<% end %>
 
 <%= if @total_trips > 0 do %>
   <.table
