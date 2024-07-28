@@ -6,7 +6,7 @@ defmodule AstraWeb.TripLive.Index do
   alias Astra.Search.{ItemsPerPage, TripSearch}
 
   @page 1
-  @per_page 10
+  @per_page 25
   @order "desc"
   @order_by :trip_date
 
@@ -189,52 +189,6 @@ defmodule AstraWeb.TripLive.Index do
     {:noreply,
      stream(socket, :trips, trips, reset: true)
      |> assign(page: new_page)}
-  end
-
-  @impl true
-  def handle_info(
-        {AstraWeb.Paginator, {:update_items_per_page, new_per_page}},
-        %{
-          assigns: %{
-            current_user: current_user,
-            order: order,
-            order_by: order_by,
-            page: page,
-            trip_search: trip_search,
-            total_trips: total_trips,
-            max_page: max_page
-          }
-        } = socket
-      ) do
-    new_max_page = calc_max_page(total_trips, new_per_page)
-
-    new_page =
-      cond do
-        new_per_page >= total_trips ->
-          1
-
-        new_max_page > max_page ->
-          new_max_page
-
-        true ->
-          page
-      end
-
-    trips =
-      build_trip_query(current_user, trip_search,
-        page: new_page,
-        per_page: new_per_page,
-        order: order,
-        order_by: order_by,
-        trip_search: trip_search
-      )
-
-    {:noreply,
-     stream(socket, :trips, trips, reset: true)
-     |> assign(:page, new_page)
-     |> assign(:per_page, new_per_page)
-     |> assign_items_per_page(%ItemsPerPage{item_limit: new_per_page})
-     |> assign_max_page()}
   end
 
   @impl true

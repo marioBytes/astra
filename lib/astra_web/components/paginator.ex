@@ -1,8 +1,6 @@
 defmodule AstraWeb.Paginator do
   use AstraWeb, :live_component
 
-  alias Astra.Search
-
   import AstraWeb.CoreComponents
 
   @impl true
@@ -17,19 +15,6 @@ defmodule AstraWeb.Paginator do
             of <span class="font-bold"><%= @total_items %></span>
             results
           </p>
-          <.form
-            for={@items_per_page_form}
-            id="items-per-page"
-            phx-target={@myself}
-            phx-change="update-items-per-page"
-          >
-            <.input
-              field={@items_per_page_form[:item_limit]}
-              label="Items per page"
-              type="pagination-select"
-              options={@options}
-            />
-          </.form>
         </div>
 
         <%!-- Buttons --%>
@@ -55,21 +40,11 @@ defmodule AstraWeb.Paginator do
   end
 
   @impl true
-  def update(%{items_per_page: items_per_page} = assigns, socket) do
-    options = [
-      [key: "10", value: 10, selected: true],
-      [key: "25", value: 25],
-      [key: "50", value: 50]
-    ]
-
-    changeset = Search.change_items_per_page(items_per_page)
-
+  def update(assigns, socket) do
     {:ok,
      socket
      |> assign(assigns)
-     |> assign_paginator_items()
-     |> assign(:options, options)
-     |> assign_form(changeset)}
+     |> assign_paginator_items()}
   end
 
   @impl true
@@ -86,48 +61,7 @@ defmodule AstraWeb.Paginator do
     {:noreply, assign_paginator_items(socket)}
   end
 
-  @impl true
-  def handle_event("update-items-per-page", %{"items_per_page" => items_per_page_params}, socket) do
-    item_limit = String.to_integer(items_per_page_params["item_limit"])
-
-    changeset = Search.change_items_per_page(socket.assigns.items_per_page, %{item_limit: item_limit})
-
-    # {:ok, changeset} =
-    #   socket.assigns.items_per_page
-    #   |> Search.change_items_per_page(%{item_limit: item_limit})
-    #   |> apply_action(:update)
-
-    notify_parent({:update_items_per_page, item_limit})
-
-    {:noreply,
-     socket
-     |> assign_paginator_items()
-     |> assign_form(changeset)}
-
-    # item_limit = String.to_integer(items_per_page_params["item_limit"])
-
-    # {:ok, new_item_per_page} =
-    #   socket.assigns.items_per_page
-    #   |> Search.change_items_per_page(%{item_limit: item_limit})
-    #   |> apply_action(:update)
-
-    # changeset = Search.change_items_per_page(new_item_per_page)
-
-    # IO.inspect(changeset.data)
-
-    # notify_parent({:update_items_per_page, item_limit})
-
-    # {:noreply,
-    #  socket
-    #  |> assign_paginator_items()
-    #  |> assign_form(changeset)}
-  end
-
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
-
-  defp assign_form(socket, changeset) do
-    assign(socket, :items_per_page_form, to_form(changeset))
-  end
 
   defp assign_paginator_items(
          %{
