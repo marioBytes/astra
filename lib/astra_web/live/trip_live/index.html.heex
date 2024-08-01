@@ -37,13 +37,46 @@
     rows={@streams.trips}
     row_click={fn {_id, trip} -> JS.navigate(~p"/trips/#{trip}") end}
   >
-    <:col :let={{_id, trip}} label="Start odometer"><%= trip.start_odometer %></:col>
-    <:col :let={{_id, trip}} label="End odometer"><%= trip.end_odometer %></:col>
-    <:col :let={{_id, trip}} label="Trip date">
+    <:col
+      :let={{_id, trip}}
+      label="Start Odometer"
+      selected={@order_by == :start_odometer}
+      order={@order}
+    >
+      <%= trip.start_odometer %>
+    </:col>
+    <:col
+      :let={{_id, trip}}
+      label="End Odometer"
+      selected={@order_by == :end_odometer}
+      order={@order}
+    >
+      <%= trip.end_odometer %>
+    </:col>
+    <:col
+      :let={{_id, trip}}
+      label="Trip Date"
+      selected={@order_by == :trip_date}
+      order={@order}
+    >
       <%= Enum.join([trip.trip_date.month, trip.trip_date.day, trip.trip_date.year], "/") %>
     </:col>
-    <:col :let={{_id, trip}} label="Trip purpose"><%= trip.trip_purpose %></:col>
-    <:col :let={{_id, trip}} label="Miles driven"><%= trip.miles_driven %></:col>
+    <:col
+      :let={{_id, trip}}
+      label="Trip Purpose"
+      selected={@order_by == :trip_purpose}
+      order={@order}
+    >
+      <%= trip.trip_purpose %>
+    </:col>
+    <:col
+      :let={{_id, trip}}
+      label="Miles Driven"
+      selected={@order_by == :miles_driven}
+      order={@order}
+    >
+      <%= trip.miles_driven %>
+    </:col>
     <:action :let={{_id, trip}}>
       <div class="sr-only">
         <.link navigate={~p"/trips/#{trip}"}>Show</.link>

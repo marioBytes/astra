@@ -271,14 +271,7 @@ defmodule AstraWeb.TripLive.Index do
       |> String.downcase()
       |> String.to_atom()
 
-    new_order =
-      (fn
-         new_order_by, old_order_by, "asc" when new_order_by == old_order_by ->
-           "desc"
-
-         _, _, _ ->
-           "asc"
-       end).(new_order_by, old_order_by, order)
+    new_order = get_new_order_by(new_order_by, old_order_by, order)
 
     trips =
       build_trip_query(current_user, trip_search,
@@ -297,6 +290,11 @@ defmodule AstraWeb.TripLive.Index do
   def handle_event("toggle-filter-show", _value, %{assigns: %{show_filters?: show_filters?}} = socket) do
     {:noreply, assign_show_filter(socket, not show_filters?)}
   end
+
+  defp get_new_order_by(new_order_by, old_order_by, "asc") when new_order_by == old_order_by,
+    do: "desc"
+
+  defp get_new_order_by(_new_order_by, _old_order_by, _order), do: "asc"
 
   defp assign_show_filter(socket, show?) do
     assign(socket, :show_filters?, show?)

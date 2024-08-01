@@ -530,6 +530,8 @@ defmodule AstraWeb.CoreComponents do
   attr :rows, :list, required: true
   attr :row_id, :any, default: nil, doc: "the function for generating the row id"
   attr :row_click, :any, default: nil, doc: "the function for handling phx-click on each row"
+  attr :selected, :boolean, default: false
+  attr :order, :string
 
   attr :row_item, :any,
     default: &Function.identity/1,
@@ -554,11 +556,23 @@ defmodule AstraWeb.CoreComponents do
           <tr>
             <th
               :for={col <- @col}
-              class="p-0 pb-4 pr-6 font-normal"
+              class={
+                [
+                  "p-0 pb-4 pr-6 font-normal",
+                  col[:label] != nil && "hover:cursor-pointer",
+                ]
+              }
               phx-click="order-by"
               phx-value-order-column={col[:label]}
             >
               <%= col[:label] %>
+              <%= if col[:selected] do %>
+                <%= if col[:order] == "asc" do %>
+                  <.icon name="hero-arrow-up" class="ml-1 h-3 w-3" />
+                <% else %>
+                  <.icon name="hero-arrow-down" class="ml-1 h-3 w-3" />
+                <% end %>
+              <% end %>
             </th>
             <th :if={@action != []} class="relative p-0 pb-4">
               <span class="sr-only"><%= gettext("Actions") %></span>
