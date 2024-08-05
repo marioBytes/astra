@@ -12,44 +12,58 @@
 alias Astra.Accounts.User
 alias Astra.CarTrips.Trip
 alias Astra.Repo
+alias Ecto.Multi
 
-users = [
-  %{id: 1, email: "mario@astra.io", password: "12345678"},
-  %{id: 2, email: "bob@astra.io", password: "12345678"},
-  %{id: 3, email: "sonya@astra.io", password: "12345678"},
-  %{id: 4, email: "bella@astra.io", password: "12345678"}
+# Create constant for trip purposes
+purposes = [:Business, :Personal, :Other]
+
+# Inserts users
+[
+  %{email: "mario@astra.io", password: "12345678"},
+  %{email: "bob@astra.io", password: "12345678"},
+  %{email: "sonya@astra.io", password: "12345678"},
+  %{email: "bella@astra.io", password: "12345678"}
 ]
-
-purposes = ["Business", "Personal", "Other"]
-
-Enum.map(users, fn u ->
+|> Enum.map(fn u ->
   %User{}
   |> User.registration_changeset(u)
   |> Repo.insert!()
+end)
 
-  Enum.map(1..100, fn _i ->
-    start_odometer = :rand.uniform(200_000)
-    end_odometer = start_odometer + :rand.uniform(100)
-    miles_driven = end_odometer - start_odometer
+# Fetches inserted users
+users = Repo.all(User)
 
-    month = :rand.uniform(12)
-    day = :rand.uniform(28)
+# Creates 100 trips for each user
+Enum.map(users, fn user ->
+  trip_count = 100
 
-    {:ok, trip_date} = Date.new(2024, month, day)
+  changesets =
+    Enum.map(1..trip_count, fn i ->
+      start_odometer = :rand.uniform(200_000)
+      end_odometer = start_odometer + :rand.uniform(100)
+      miles_driven = end_odometer - start_odometer
 
-    purpose = Enum.random(purposes)
+      month = :rand.uniform(12)
+      day = :rand.uniform(28)
 
-    trip_changeset = %{
-      start_odometer: start_odometer,
-      end_odometer: end_odometer,
-      trip_date: trip_date,
-      trip_purpose: purpose,
-      miles_driven: miles_driven,
-      user_id: u.id
-    }
+      {:ok, trip_date} = Date.new(2024, month, day)
 
-    %Trip{}
-    |> Trip.changeset(trip_changeset)
-    |> Repo.insert!()
+      purpose = Enum.random(purposes)
+
+      trip_changeset = %{
+        start_odometer: start_odometer,
+        end_odometer: end_odometer,
+        trip_date: trip_date,
+        trip_purpose: purpose,
+        miles_driven: miles_driven,
+        user_id: user.id
+      }
+    end)
+
+  Enum.reduce(changesets, {0, Multi.new()}, fn changeset, {n, multi} ->
+    {n + 1, Multi.insert(multi, n, Trip.changeset(%Trip{}, changeset))}
   end)
+  |> elem(1)
+  |> Multi.update(:user_trip_count, User.trip_count_changeset(user, %{trip_count: trip_count}))
+  |> Repo.transaction
 end)
