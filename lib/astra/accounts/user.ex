@@ -9,6 +9,7 @@ defmodule Astra.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :naive_datetime
 
+    field :trip_count, :integer
     has_many :trips, Trip
 
     timestamps(type: :utc_datetime)
@@ -88,6 +89,21 @@ defmodule Astra.Accounts.User do
     else
       changeset
     end
+  end
+
+  @doc """
+  A user changeset for changing the trip count.
+  """
+  def trip_count_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:trip_count])
+    |> validate_change(:trip_count, fn :trip_count, trip_count ->
+      if is_integer(trip_count) do
+        []
+      else
+        [:trip_count, "Cannot be non-integer"]
+      end
+    end)
   end
 
   @doc """
