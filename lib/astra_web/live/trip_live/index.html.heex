@@ -1,9 +1,14 @@
 <.header>
   Your Trip History
   <:actions>
-    <.link patch={~p"/trips/new"}>
-      <.button_primary>New Trip</.button_primary>
-    </.link>
+    <div class="flex gap-3">
+      <.link patch={~p"/trips/new"}>
+        <.button_primary>New Trip</.button_primary>
+      </.link>
+      <.link patch={~p"/trips/import"}>
+        <.button_primary>Import Trips</.button_primary>
+      </.link>
+    </div>
   </:actions>
 </.header>
 

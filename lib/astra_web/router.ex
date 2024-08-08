@@ -64,6 +64,8 @@ defmodule AstraWeb.Router do
   scope "/", AstraWeb do
     pipe_through [:browser, :require_authenticated_user]
 
+    get "/sample-csv", CSVController, :index
+
     live_session :require_authenticated_user,
       on_mount: [{AstraWeb.UserAuth, :ensure_authenticated}] do
       live "/users/settings", UserSettingsLive, :edit
@@ -72,6 +74,7 @@ defmodule AstraWeb.Router do
       live "/trips", TripLive.Index, :index
       live "/trips/new", TripLive.Index, :new
       live "/trips/:id/edit", TripLive.Index, :edit
+      live "/trips/import", TripLive.Import, :import
 
       live "/trips/:id", TripLive.Show, :show
       live "/trips/:id/show/edit", TripLive.Show, :edit

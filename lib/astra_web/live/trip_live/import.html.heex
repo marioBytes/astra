@@ -1,0 +1,53 @@
+<.header>
+  Import Trips
+  <:subtitle>
+    Open up the file below in Excel, Google sheets or a similar
+  </:subtitle>
+  <:actions>
+    <.link href={~p"/sample-csv"} target="_blank" class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
+      Download Sample CSV
+    </.link>
+  </:actions>
+</.header>
+
+<div class="my-12">
+  <form :if={length(@parsed_rows) == 0} id="upload-form" phx-submit="parse" phx-change="validate" class="space-y-2">
+    <div class="p-4 border border-zinc-200 rounded" phx-drop-target={@uploads.sample_csv.ref}>
+      <.live_file_input upload={@uploads.sample_csv} />
+    </div>
+    <.button_primary type="submit">Upload</.button_primary>
+  </form>
+  <div :if={length(@parsed_rows) > 0} class="flex items-center space-x-2">
+    <h3 class="text-base font-semibold">Upload a new csv file</h3>
+    <.button_primary type="button" phx-click="reset">Reset</.button_primary>
+  </div>
+</div>
+
+<div :if={@sample_trips != []} class="space-y-2">
+  <h3 class="text-xl font-bold">Preview</h3>
+  <.table id="trips" rows={@sample_trips}>
+    <:col :let={trip} label="Start Odometer">
+      <%= trip.start_odometer %>
+    </:col>
+    <:col :let={trip} label="End Odometer">
+      <%= trip.end_odometer %>
+    </:col>
+    <:col :let={trip} label="Trip Date">
+      <%= Enum.join([trip.trip_date.month, trip.trip_date.day, trip.trip_date.year], "/") %>
+    </:col>
+    <:col :let={trip} label="Trip Purpose">
+      <%= trip.trip_purpose %>
+    </:col>
+    <:col :let={trip} label="Miles Driven">
+      <%= trip.miles_driven %>
+    </:col>
+  </.table>
+  <p>This is a sample of the data to import</p>
+  <.button_primary type="button" phx-click="import">Import Now</.button_primary>
+</div>
+
+<div :if={@imported_trips != []} class="space-y-2">
+  <h3 class="text-xl font-bold">Import Result</h3>
+  <p>Success: <%= length(for {:ok, _} = row <- @imported_trips , do: row) %> imports</p>
+  <p>Failed: <%= length(for {:error, _} = row <- @imported_trips , do: row) %> imports</p>
+</div>
