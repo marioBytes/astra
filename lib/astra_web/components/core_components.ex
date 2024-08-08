@@ -539,6 +539,8 @@ defmodule AstraWeb.CoreComponents do
 
   slot :col, required: true do
     attr :label, :string
+    attr :selected, :boolean
+    attr :order, :string
   end
 
   slot :action, doc: "the slot for showing user actions in the last table column"
