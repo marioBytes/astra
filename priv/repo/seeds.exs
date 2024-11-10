@@ -19,10 +19,10 @@ purposes = [:Business, :Personal, :Other]
 
 # Inserts users
 [
-  %{email: "mario@astra.io", password: "12345678"},
-  %{email: "bob@astra.io", password: "12345678"},
-  %{email: "sonya@astra.io", password: "12345678"},
-  %{email: "bella@astra.io", password: "12345678"}
+  %{email: "mario@astra.io", password: "password1234"},
+  %{email: "bob@astra.io", password: "password1234"},
+  %{email: "sonya@astra.io", password: "password1234"},
+  %{email: "bella@astra.io", password: "password1234"}
 ]
 |> Enum.map(fn u ->
   %User{}
