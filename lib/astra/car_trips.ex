@@ -240,7 +240,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_trip(User.t(), Trip.t()) :: {:ok, Trip.t()} | {:error, Ecto.Changeset.t()}
+  @spec delete_trip(User.t(), Trip.t()) :: {:ok, Trip.t()} | {:error, Ecto.Changeset.t()} | {:error, atom()}
   def delete_trip(%User{} = current_user, %Trip{} = trip) do
     case Authorizer.authorize(:update, current_user, trip) do
       :ok ->
