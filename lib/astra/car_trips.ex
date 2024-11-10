@@ -114,7 +114,7 @@ defmodule Astra.CarTrips do
       80
 
   """
-  @spec count_trips(%User{}) :: integer()
+  @spec count_trips(User.t()) :: integer()
   def count_trips(%User{} = current_user) do
     Queries.filter_by_user(current_user.id)
     |> Repo.aggregate(:count)
@@ -129,7 +129,7 @@ defmodule Astra.CarTrips do
       80
 
   """
-  @spec count_trips(%User{}, String.t(), String.t()) :: integer()
+  @spec count_trips(User.t(), String.t(), String.t()) :: integer()
   def count_trips(%User{} = current_user, start_date, end_date) do
     current_user.id
     |> Queries.filter_by_user()
@@ -195,7 +195,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_trip(struct()) :: {atom(), struct()}
+  @spec create_trip(map()) :: {:ok, Trip.t()} | {:error, Trip.t()}
   def create_trip(attrs \\ %{}) do
     %Trip{}
     |> Trip.changeset(attrs)
@@ -214,7 +214,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_trip(%User{}, %Trip{}, struct()) :: {atom(), struct()}
+  @spec update_trip(User.t(), Trip.t(), map()) :: {atom(), Trip.t()}
   def update_trip(%User{} = current_user, %Trip{} = trip, attrs) do
     case Authorizer.authorize(:update, current_user, trip) do
       :ok ->
@@ -239,7 +239,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec delete_trip(%User{}, %Trip{}) :: {atom(), struct()}
+  @spec delete_trip(User.t(), Trip.t()) :: {:ok, Trip.t()} | {:error, Ecto.Changeset.t()}
   def delete_trip(%User{} = current_user, %Trip{} = trip) do
     case Authorizer.authorize(:update, current_user, trip) do
       :ok ->
@@ -259,7 +259,7 @@ defmodule Astra.CarTrips do
       %Ecto.Changeset{data: %Trip{}}
 
   """
-  @spec change_trip(%Trip{}, struct()) :: %Ecto.Changeset{}
+  @spec change_trip(Trip.t(), map()) :: Ecto.Changeset.t()
   def change_trip(%Trip{} = trip, attrs \\ %{}) do
     Trip.changeset(trip, attrs)
   end

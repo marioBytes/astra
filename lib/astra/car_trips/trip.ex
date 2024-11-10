@@ -4,6 +4,8 @@ defmodule Astra.CarTrips.Trip do
 
   alias Astra.Accounts.User
 
+  @type t() :: %__MODULE__{}
+
   schema "trips" do
     field :start_odometer, :integer
     field :end_odometer, :integer
