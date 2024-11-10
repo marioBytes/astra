@@ -309,10 +309,10 @@ defmodule AstraWeb.TripLive.Index do
   end
 
   defp assign_trip_order(socket, params) do
-    per_page = if Map.has_key?(params, :per_page), do: params.per_page, else: socket.assigns.per_page
-    page = if Map.has_key?(params, :page), do: params.page, else: socket.assigns.page
-    order = if Map.has_key?(params, :order), do: params.order, else: socket.assigns.order
-    order_by = if Map.has_key?(params, :order_by), do: params.order_by, else: socket.assigns.order_by
+    per_page = Map.get(params, :per_page, socket.assigns.per_page)
+    page = Map.get(params, :page, socket.assigns.page)
+    order = Map.get(params, :order, socket.assigns.order)
+    order_by = Map.get(params, :order_by, socket.assigns.order_by)
 
     socket
     |> assign(:per_page, per_page)
