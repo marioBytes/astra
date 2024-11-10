@@ -1,7 +1,7 @@
 <.header>
   Import Trips
   <:subtitle>
-    Open up the file below in Excel, Google sheets or a similar
+    Open up the file below in Excel, Google sheets or a similar.
   </:subtitle>
   <:actions>
     <.link href={~p"/sample-csv"} target="_blank" class="text-sm font-semibold leading-6 text-zinc-900 hover:text-zinc-700">
@@ -12,10 +12,18 @@
 
 <div class="my-12">
   <form :if={length(@parsed_rows) == 0} id="upload-form" phx-submit="parse" phx-change="validate" class="space-y-2">
-    <div class="p-4 border border-zinc-200 rounded" phx-drop-target={@uploads.sample_csv.ref}>
+    <div class="p-4 border border-zinc-200 rounded flex flex-col gap-3" phx-drop-target={@uploads.sample_csv.ref}>
+      <label for={@uploads.sample_csv.ref}>Upload your Trip CSV file</label>
       <.live_file_input upload={@uploads.sample_csv} />
     </div>
-    <.button_primary type="submit">Upload</.button_primary>
+    <div :if={@uploads.sample_csv.errors != []}>
+      <p class="text-rose-600">
+        <%= @error %>
+      </p>
+    </div>
+    <div class="py-3 flex items-center gap-3">
+      <.button_primary type="submit">Upload</.button_primary>
+    </div>
   </form>
   <div :if={length(@parsed_rows) > 0} class="flex items-center space-x-2">
     <h3 class="text-base font-semibold">Upload a new csv file</h3>
@@ -23,31 +31,73 @@
   </div>
 </div>
 
-<div :if={@sample_trips != []} class="space-y-2">
-  <h3 class="text-xl font-bold">Preview</h3>
-  <.table id="trips" rows={@sample_trips}>
-    <:col :let={trip} label="Start Odometer">
-      <%= trip.start_odometer %>
-    </:col>
-    <:col :let={trip} label="End Odometer">
-      <%= trip.end_odometer %>
-    </:col>
-    <:col :let={trip} label="Trip Date">
-      <%= Enum.join([trip.trip_date.month, trip.trip_date.day, trip.trip_date.year], "/") %>
-    </:col>
-    <:col :let={trip} label="Trip Purpose">
-      <%= trip.trip_purpose %>
-    </:col>
-    <:col :let={trip} label="Miles Driven">
-      <%= trip.miles_driven %>
-    </:col>
-  </.table>
-  <p>This is a sample of the data to import</p>
-  <.button_primary type="button" phx-click="import">Import Now</.button_primary>
+<div :if={@valid_sample_trips != []} class="space-y-2">
+  <div class="flex items-center justify-between">
+    <h3 class="text-xl font-bold">Preview</h3>
+    <p><%= @valid_sample_trips_count %> of <%= @total_sample_trips_count %> Trips to be imported</p>
+  </div>
+  <div>
+    <.table id="trips" rows={@valid_sample_trips}>
+      <:col :let={trip} label="Start Odometer">
+        <%= trip.changes.start_odometer %>
+      </:col>
+      <:col :let={trip} label="End Odometer">
+        <%= trip.changes.end_odometer %>
+      </:col>
+      <:col :let={trip} label="Trip Date">
+        <%= trip.changes.trip_date %>
+      </:col>
+      <:col :let={trip} label="Trip Purpose">
+        <%= trip.changes.trip_purpose %>
+      </:col>
+      <:col :let={trip} label="Miles Driven">
+        <%= trip.changes.miles_driven %>
+      </:col>
+    </.table>
+  </div>
+  <div class="py-3">
+    <div :if={@invalid_sample_trips != []}>
+      <p class="text-rose-600">
+        Some of Trips will not be imported. Please make sure all of your trips:
+      </p>
+      <ul class="list-disc text-rose-600 ml-7">
+        <li>Have a Trip Date in the format <span class="font-bold">YYYY-MM-DD</span></li>
+        <li>Have a Trip Purpose of "Business", "Personal", or "Other"</li>
+        <li>Have the Start Odometer less than your End Odometer</li>
+        <li>Have an amount of Miles Driven greater than 0</li>
+      </ul>
+    </div>
+    <div class="py-3">
+      <.button_primary type="button" phx-click="import">
+        <span :if={@invalid_sample_trips != []}>Import Valid Trips</span>
+        <span :if={@invalid_sample_trips == []}>Import Trips</span>
+      </.button_primary>
+    </div>
+  </div>
 </div>
 
 <div :if={@imported_trips != []} class="space-y-2">
   <h3 class="text-xl font-bold">Import Result</h3>
-  <p>Success: <%= length(for {:ok, _} = row <- @imported_trips , do: row) %> imports</p>
-  <p>Failed: <%= length(for {:error, _} = row <- @imported_trips , do: row) %> imports</p>
+  <p>Success: <%= @imported_trips_count %> imports</p>
+  <p>Failed: <%= length(@failed_imported_trips) %> imports</p>
+  <div :if={@failed_imported_trips != []}>
+    <h3 class="text-xl font-bold">Trips that failed to import</h3>
+    <.table id="failed-trips" rows={@failed_imported_trips}>
+      <:col :let={failed_trip} label="Start Odometer">
+        <%= failed_trip.start_odometer %>
+      </:col>
+      <:col :let={failed_trip} label="Start Odometer">
+        <%= failed_trip.end_odometer %>
+      </:col>
+      <:col :let={failed_trip} label="Trip Date">
+        <%= failed_trip.trip_date %>
+      </:col>
+      <:col :let={failed_trip} label="Trip Purpose">
+        <%= failed_trip.trip_purpose %>
+      </:col>
+      <:col :let={failed_trip} label="Miles Driven">
+        <%= failed_trip.miles_driven %>
+      </:col>
+    </.table>
+  </div>
 </div>

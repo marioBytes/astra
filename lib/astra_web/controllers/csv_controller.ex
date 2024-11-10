@@ -1,10 +1,10 @@
 defmodule AstraWeb.CSVController do
   use AstraWeb, :controller
 
-  import Astra.CarTrips.Importer
+  alias Astra.CarTrips.Importer
 
   def index(conn, _params) do
-    csv_data = empty_csv_data()
+    csv_data = Importer.empty_csv_data()
 
     send_download(
       conn,

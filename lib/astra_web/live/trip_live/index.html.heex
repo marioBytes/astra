@@ -64,7 +64,7 @@
       selected={@order_by == :trip_date}
       order={@order}
     >
-      <%= Enum.join([trip.trip_date.month, trip.trip_date.day, trip.trip_date.year], "/") %>
+      <%= trip.trip_date %>
     </:col>
     <:col
       :let={{_id, trip}}
