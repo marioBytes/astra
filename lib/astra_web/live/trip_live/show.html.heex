@@ -15,7 +15,7 @@
     <%= Enum.join([@trip.trip_date.month, @trip.trip_date.day, @trip.trip_date.year], "/") %>
   </:item>
   <:item title="Trip purpose"><%= @trip.trip_purpose %></:item>
-  <:item title="Miles driven"><%= @trip.miles_driven %></:item>
+  <:item title="Miles driven"><%= @trip.amount_driven %></:item>
 </.list>
 
 <.back navigate={~p"/trips"}>Back to miles</.back>

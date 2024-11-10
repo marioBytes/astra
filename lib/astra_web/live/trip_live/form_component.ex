@@ -59,7 +59,7 @@ defmodule AstraWeb.TripLive.FormComponent do
   end
 
   def handle_event("save", %{"trip" => trip_params}, socket) do
-    trip_params = maybe_calculate_miles_driven(socket.assigns.trip, trip_params)
+    trip_params = maybe_calculate_amount_driven(socket.assigns.trip, trip_params)
 
     save_trip(socket, socket.assigns.action, trip_params)
   end
@@ -124,18 +124,18 @@ defmodule AstraWeb.TripLive.FormComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  defp maybe_calculate_miles_driven(
+  defp maybe_calculate_amount_driven(
          trip,
          %{"start_odometer" => start_odometer, "end_odometer" => end_odometer} = trip_params
        ) do
     if trip.start_odometer == start_odometer and trip.end_odometer == end_odometer do
       trip_params
     else
-      Map.put(trip_params, "miles_driven", calculate_miles_driven(trip_params))
+      Map.put(trip_params, "amount_driven", calculate_amount_driven(trip_params))
     end
   end
 
-  defp calculate_miles_driven(%{
+  defp calculate_amount_driven(%{
          "start_odometer" => start_odometer,
          "end_odometer" => end_odometer
        }) do

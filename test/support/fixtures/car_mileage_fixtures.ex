@@ -12,7 +12,7 @@ defmodule Astra.CarMileageFixtures do
       attrs
       |> Enum.into(%{
         end_odometer: 42,
-        miles_driven: 42,
+        amount_driven: 42,
         start_odometer: 42,
         trip_date: ~D[2024-06-01],
         trip_purpose: "some trip_purpose"

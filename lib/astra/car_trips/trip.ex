@@ -11,7 +11,7 @@ defmodule Astra.CarTrips.Trip do
     field :end_odometer, :integer
     field :trip_date, :date
     field :trip_purpose, Ecto.Enum, values: [:Business, :Personal, :Other]
-    field :miles_driven, :integer
+    field :amount_driven, :integer
 
     belongs_to :user, User
 
@@ -26,7 +26,7 @@ defmodule Astra.CarTrips.Trip do
       :end_odometer,
       :trip_date,
       :trip_purpose,
-      :miles_driven,
+      :amount_driven,
       :user_id
     ])
     |> validate_required([
@@ -34,7 +34,7 @@ defmodule Astra.CarTrips.Trip do
       :end_odometer,
       :trip_date,
       :trip_purpose,
-      :miles_driven,
+      :amount_driven,
       :user_id
     ])
     |> maybe_validate_start_odometer_is_less_than_end_odometer()

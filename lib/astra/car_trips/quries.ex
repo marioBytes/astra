@@ -27,7 +27,7 @@ defmodule Astra.CarTrips.Queries do
     |> filter_by_purpose(purpose)
   end
 
-  def total_miles_driven(query) do
-    query |> select([t], sum(t.miles_driven))
+  def total_amount_driven(query) do
+    query |> select([t], sum(t.amount_driven))
   end
 end

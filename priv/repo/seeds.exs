@@ -41,7 +41,7 @@ Enum.map(users, fn user ->
     Enum.map(1..trip_count, fn i ->
       start_odometer = :rand.uniform(200_000)
       end_odometer = start_odometer + :rand.uniform(100)
-      miles_driven = end_odometer - start_odometer
+      amount_driven = end_odometer - start_odometer
 
       month = :rand.uniform(12)
       day = :rand.uniform(28)
@@ -55,7 +55,7 @@ Enum.map(users, fn user ->
         end_odometer: end_odometer,
         trip_date: trip_date,
         trip_purpose: purpose,
-        miles_driven: miles_driven,
+        amount_driven: amount_driven,
         user_id: user.id
       }
     end)
