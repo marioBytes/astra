@@ -195,7 +195,7 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec create_trip(map()) :: {:ok, Trip.t()} | {:error, Trip.t()}
+  @spec create_trip(map()) :: {:ok, Trip.t()} | {:error, Ecto.Changeset.t()}
   def create_trip(attrs \\ %{}) do
     %Trip{}
     |> Trip.changeset(attrs)
@@ -214,7 +214,8 @@ defmodule Astra.CarTrips do
       {:error, %Ecto.Changeset{}}
 
   """
-  @spec update_trip(User.t(), Trip.t(), map()) :: {atom(), Trip.t()}
+  @spec update_trip(User.t(), Trip.t(), map()) ::
+          {:ok, Trip.t()} | {:error, Ecto.Changeset.t()} | {:error, atom()}
   def update_trip(%User{} = current_user, %Trip{} = trip, attrs) do
     case Authorizer.authorize(:update, current_user, trip) do
       :ok ->
