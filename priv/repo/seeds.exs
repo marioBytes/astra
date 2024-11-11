@@ -37,8 +37,8 @@ users = Repo.all(User)
 Enum.map(users, fn user ->
   trip_count = 100
 
-  changesets =
-    Enum.map(1..trip_count, fn i ->
+  trips_attrs =
+    Enum.map(1..trip_count, fn _i ->
       start_odometer = :rand.uniform(200_000)
       end_odometer = start_odometer + :rand.uniform(100)
       amount_driven = end_odometer - start_odometer
@@ -50,7 +50,7 @@ Enum.map(users, fn user ->
 
       purpose = Enum.random(purposes)
 
-      trip_changeset = %{
+      %{
         start_odometer: start_odometer,
         end_odometer: end_odometer,
         trip_date: trip_date,
@@ -60,7 +60,7 @@ Enum.map(users, fn user ->
       }
     end)
 
-  Enum.reduce(changesets, {0, Multi.new()}, fn changeset, {n, multi} ->
+  Enum.reduce(trips_attrs, {0, Multi.new()}, fn changeset, {n, multi} ->
     {n + 1, Multi.insert(multi, n, Trip.changeset(%Trip{}, changeset))}
   end)
   |> elem(1)
