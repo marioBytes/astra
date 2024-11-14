@@ -19,10 +19,10 @@ purposes = [:Business, :Personal, :Other]
 
 # Inserts users
 [
-  %{email: "mario@astra.io", password: "12345678"},
-  %{email: "bob@astra.io", password: "12345678"},
-  %{email: "sonya@astra.io", password: "12345678"},
-  %{email: "bella@astra.io", password: "12345678"}
+  %{email: "mario@astra.io", password: "password1234"},
+  %{email: "bob@astra.io", password: "password1234"},
+  %{email: "sonya@astra.io", password: "password1234"},
+  %{email: "bella@astra.io", password: "password1234"}
 ]
 |> Enum.map(fn u ->
   %User{}
@@ -37,11 +37,11 @@ users = Repo.all(User)
 Enum.map(users, fn user ->
   trip_count = 100
 
-  changesets =
-    Enum.map(1..trip_count, fn i ->
+  trips_attrs =
+    Enum.map(1..trip_count, fn _i ->
       start_odometer = :rand.uniform(200_000)
       end_odometer = start_odometer + :rand.uniform(100)
-      miles_driven = end_odometer - start_odometer
+      amount_driven = end_odometer - start_odometer
 
       month = :rand.uniform(12)
       day = :rand.uniform(28)
@@ -50,17 +50,17 @@ Enum.map(users, fn user ->
 
       purpose = Enum.random(purposes)
 
-      trip_changeset = %{
+      %{
         start_odometer: start_odometer,
         end_odometer: end_odometer,
         trip_date: trip_date,
         trip_purpose: purpose,
-        miles_driven: miles_driven,
+        amount_driven: amount_driven,
         user_id: user.id
       }
     end)
 
-  Enum.reduce(changesets, {0, Multi.new()}, fn changeset, {n, multi} ->
+  Enum.reduce(trips_attrs, {0, Multi.new()}, fn changeset, {n, multi} ->
     {n + 1, Multi.insert(multi, n, Trip.changeset(%Trip{}, changeset))}
   end)
   |> elem(1)

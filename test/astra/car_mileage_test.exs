@@ -8,7 +8,7 @@ defmodule Astra.CarMileageTest do
 
     import Astra.CarMileageFixtures
 
-    @invalid_attrs %{start_odometer: nil, end_odometer: nil, trip_date: nil, trip_purpose: nil, miles_driven: nil}
+    @invalid_attrs %{start_odometer: nil, end_odometer: nil, trip_date: nil, trip_purpose: nil, amount_driven: nil}
 
     test "list_miles/0 returns all miles" do
       mileage = mileage_fixture()
@@ -21,14 +21,14 @@ defmodule Astra.CarMileageTest do
     end
 
     test "create_mileage/1 with valid data creates a mileage" do
-      valid_attrs = %{start_odometer: 42, end_odometer: 42, trip_date: ~D[2024-06-01], trip_purpose: "some trip_purpose", miles_driven: 42}
+      valid_attrs = %{start_odometer: 42, end_odometer: 42, trip_date: ~D[2024-06-01], trip_purpose: "some trip_purpose", amount_driven: 42}
 
       assert {:ok, %Mileage{} = mileage} = CarMileage.create_mileage(valid_attrs)
       assert mileage.start_odometer == 42
       assert mileage.end_odometer == 42
       assert mileage.trip_date == ~D[2024-06-01]
       assert mileage.trip_purpose == "some trip_purpose"
-      assert mileage.miles_driven == 42
+      assert mileage.amount_driven == 42
     end
 
     test "create_mileage/1 with invalid data returns error changeset" do
@@ -37,14 +37,14 @@ defmodule Astra.CarMileageTest do
 
     test "update_mileage/2 with valid data updates the mileage" do
       mileage = mileage_fixture()
-      update_attrs = %{start_odometer: 43, end_odometer: 43, trip_date: ~D[2024-06-02], trip_purpose: "some updated trip_purpose", miles_driven: 43}
+      update_attrs = %{start_odometer: 43, end_odometer: 43, trip_date: ~D[2024-06-02], trip_purpose: "some updated trip_purpose", amount_driven: 43}
 
       assert {:ok, %Mileage{} = mileage} = CarMileage.update_mileage(mileage, update_attrs)
       assert mileage.start_odometer == 43
       assert mileage.end_odometer == 43
       assert mileage.trip_date == ~D[2024-06-02]
       assert mileage.trip_purpose == "some updated trip_purpose"
-      assert mileage.miles_driven == 43
+      assert mileage.amount_driven == 43
     end
 
     test "update_mileage/2 with invalid data returns error changeset" do

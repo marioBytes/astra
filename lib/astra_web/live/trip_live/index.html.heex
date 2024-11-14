@@ -77,10 +77,10 @@
     <:col
       :let={{_id, trip}}
       label="Miles Driven"
-      selected={@order_by == :miles_driven}
+      selected={@order_by == :amount_driven}
       order={@order}
     >
-      <%= trip.miles_driven %>
+      <%= trip.amount_driven %>
     </:col>
     <:action :let={{_id, trip}}>
       <div class="sr-only">

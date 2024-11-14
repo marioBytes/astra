@@ -4,9 +4,9 @@ defmodule AstraWeb.MileageLiveTest do
   import Phoenix.LiveViewTest
   import Astra.CarMileageFixtures
 
-  @create_attrs %{start_odometer: 42, end_odometer: 42, trip_date: "2024-06-01", trip_purpose: "some trip_purpose", miles_driven: 42}
-  @update_attrs %{start_odometer: 43, end_odometer: 43, trip_date: "2024-06-02", trip_purpose: "some updated trip_purpose", miles_driven: 43}
-  @invalid_attrs %{start_odometer: nil, end_odometer: nil, trip_date: nil, trip_purpose: nil, miles_driven: nil}
+  @create_attrs %{start_odometer: 42, end_odometer: 42, trip_date: "2024-06-01", trip_purpose: "some trip_purpose", amount_driven: 42}
+  @update_attrs %{start_odometer: 43, end_odometer: 43, trip_date: "2024-06-02", trip_purpose: "some updated trip_purpose", amount_driven: 43}
+  @invalid_attrs %{start_odometer: nil, end_odometer: nil, trip_date: nil, trip_purpose: nil, amount_driven: nil}
 
   defp create_mileage(_) do
     mileage = mileage_fixture()
